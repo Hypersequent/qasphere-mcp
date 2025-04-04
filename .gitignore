@@ -34,3 +34,5 @@ coverage/
 
 # Optional eslint cache
 .eslintcache 
+
+mcp-log.txt

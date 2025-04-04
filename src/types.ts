@@ -49,6 +49,13 @@ export interface TestCase {
   updatedAt: string;             // Test case updation time (ISO 8601 format)
 }
 
+export interface TestCasesListResponse {
+  total: number;                 // Total number of filtered test cases
+  page: number;                  // Current page number
+  limit: number;                 // Number of test cases per page
+  data: TestCase[];              // List of test case objects
+}
+
 export interface ProjectLink {
   url: string;
   text: string;

@@ -2,11 +2,13 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { z } from "zod";
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { Project, TestCase } from './types.js';
+import { Project, TestCase, TestCasesListResponse } from './types.js';
 import { JSONStringify } from './utils.js';
+import { LoggingTransport } from './LoggingTransport.js';
 
 dotenv.config();
 
@@ -31,9 +33,10 @@ const QASPHERE_API_KEY = process.env.QASPHERE_API_KEY!;
 // Create MCP server
 const server = new McpServer({
   name: 'qasphere-mcp',
-  version: '0.0.1',
-  description: 'QA Sphere MCP server for fetching test cases and projects',
+  version: process.env.npm_package_version || '0.0.0',
+  description: 'QA Sphere MCP server for fetching test cases and projects.',
 });
+
 
 // Add the get_test_case tool
 server.tool(
@@ -110,7 +113,7 @@ server.tool(
 
 server.tool(
   'list_projects',
-  `Get a list of all projects from QA Sphere`,
+  `Get a list of all projects from QA Sphere (qasphere.com)`,
   {},
   async () => {
     try {
@@ -149,9 +152,126 @@ server.tool(
   }
 );
 
+server.tool(
+  'list_test_cases',
+  `List test cases from a project in QA Sphere. Supports pagination and various filtering options.`,
+  {
+    projectCode: z.string().regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)'),
+    page: z.number().optional(),
+    limit: z.number().optional().default(20),
+    sortField: z.enum(['id', 'seq', 'folder_id', 'author_id', 'pos', 'title', 'priority', 'created_at', 'updated_at', 'legacy_id']).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
+    search: z.string().optional(),
+    include: z.array(z.enum(['steps', 'tags', 'project', 'folder', 'path'])).optional(),
+    folders: z.array(z.number()).optional(),
+    tags: z.array(z.number()).optional(),
+    priorities: z.array(z.enum(['high', 'medium', 'low'])).optional(),
+    draft: z.boolean().optional()
+  },
+  async ({ 
+    projectCode, 
+    page, 
+    limit = 20, 
+    sortField, 
+    sortOrder, 
+    search, 
+    include, 
+    folders, 
+    tags, 
+    priorities, 
+    draft 
+  }) => {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (page !== undefined) params.append('page', page.toString());
+      if (limit !== undefined) params.append('limit', limit.toString());
+      if (sortField) params.append('sortField', sortField);
+      if (sortOrder) params.append('sortOrder', sortOrder);
+      if (search) params.append('search', search);
+      
+      // Add array parameters
+      if (include) include.forEach(item => params.append('include', item));
+      if (folders) folders.forEach(item => params.append('folders', item.toString()));
+      if (tags) tags.forEach(item => params.append('tags', item.toString()));
+      if (priorities) priorities.forEach(item => params.append('priorities', item));
+      
+      if (draft !== undefined) params.append('draft', draft.toString());
+      
+      const url = `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectCode}/tcase`;
+      
+      const response = await axios.get<TestCasesListResponse>(
+        url,
+        {
+          params,
+          headers: {
+            'Authorization': `ApiKey ${QASPHERE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const testCasesList = response.data;
+
+      // Basic validation of response
+      if (!testCasesList || !Array.isArray(testCasesList.data)) {
+        throw new Error('Invalid response: expected a list of test cases');
+      }
+      
+      // check for other fields from TestCasesListResponse
+      if (testCasesList.total === undefined || testCasesList.page === undefined || testCasesList.limit === undefined) {
+        throw new Error('Invalid response: missing required fields (total, page, or limit)');
+      }
+
+      // if array is non-empty check if object has id and title fields
+      if (testCasesList.data.length > 0) {
+        const firstTestCase = testCasesList.data[0];
+        if (!firstTestCase.id || !firstTestCase.title) {
+          throw new Error('Invalid test case data: missing required fields (id or title)');
+        }
+      }
+      
+      return {
+        content: [{ 
+          type: "text", 
+          text: JSONStringify(testCasesList, { 
+            'data': { 
+              'comment': 'precondition', 
+              'steps': {
+                'description': 'action', 
+                'expected': 'expected_result'
+              } 
+            } 
+          })
+        }],
+      };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          throw new Error(`Project with code '${projectCode}' not found.`);
+        }
+        throw new Error(`Failed to fetch test cases: ${error.response?.data?.message || error.message}`);
+      }
+      throw error;
+    }
+  }
+);
+
 // Start receiving messages on stdin and sending messages on stdout
 async function startServer() {
-  const transport = new StdioServerTransport();
+  // Create base transport
+  const baseTransport = new StdioServerTransport();
+  
+  // Wrap with logging transport if MCP_LOG_TO_FILE is set
+  let transport: Transport = baseTransport;
+  
+  if (process.env.MCP_LOG_TO_FILE) {
+    const logFilePath = process.env.MCP_LOG_TO_FILE;
+    console.error(`MCP: Logging to file: ${logFilePath}`);
+    transport = new LoggingTransport(baseTransport, logFilePath);
+  }
+  
   await server.connect(transport);
   console.error('QA Sphere MCP server started');
 }
