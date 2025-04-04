@@ -35,8 +35,6 @@ const server = new McpServer({
   description: 'QA Sphere MCP server for fetching test cases and projects',
 });
 
-
-
 // Add the get_test_case tool
 server.tool(
   'get_test_case',
@@ -110,8 +108,46 @@ server.tool(
   }
 );
 
+server.tool(
+  'list_projects',
+  `Get a list of all projects from QA Sphere`,
+  {},
+  async () => {
+    try {
+      const response = await axios.get(
+        `${QASPHERE_TENANT_URL}/api/public/v0/project`,
+        {
+          headers: {
+            'Authorization': `ApiKey ${QASPHERE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
+      const projectsData = response.data;
+      if (!Array.isArray(projectsData.projects)) {
+        throw new Error('Invalid response: expected an array of projects');
+      }
 
+      // if array is non-empty check if object has id and title fields
+      if (projectsData.projects.length > 0) {
+        const firstProject = projectsData.projects[0];
+        if (!firstProject.id || !firstProject.title) {
+          throw new Error('Invalid project data: missing required fields (id or title)');
+        }
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(projectsData) }]
+      };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(`Failed to fetch projects: ${error.response?.data?.message || error.message}`);
+      }
+      throw error;
+    }
+  }
+);
 
 // Start receiving messages on stdin and sending messages on stdout
 async function startServer() {

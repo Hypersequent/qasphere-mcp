@@ -23,7 +23,7 @@
   "author": "Hypersequent",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/index.js",
     "dev": "tsx src/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "test": "vitest run"

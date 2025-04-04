@@ -3,7 +3,8 @@ A [Model Context Protocol](https://github.com/modelcontextprotocol) server for t
 
 This server provides integration with QA Sphere test management system through MCP, allowing LLMs to interact with QA Sphere test cases.
 
-## Prerequisites
+## Getting Started 
+### Prerequisites
 
 - Node.js environment (recent version)
 - QA Sphere account with API access
@@ -11,7 +12,7 @@ This server provides integration with QA Sphere test management system through M
   - `QASPHERE_TENANT_URL`: Your company's QA Sphere URL (e.g., `example.eu2.qasphere.com`)
   - `QASPHERE_API_KEY`: API key from QA Sphere (Settings → API Keys → Add API Key)
 
-## MCP Clients
+### MCP Clients
 
 Theoretically, any MCP client should work with QA Sphere MCP. 
 
@@ -35,3 +36,6 @@ To set up Claude Desktop as a QA Sphere MCP client, go to `Claude` → `Settings
 }
 ```
 
+## Interactions 
+
+Currently this MCP server provides basic way to get information about test cases and projects in QA Sphere. 
