@@ -38,4 +38,4 @@ To set up Claude Desktop as a QA Sphere MCP client, go to `Claude` → `Settings
 
 ## Interactions 
 
-Currently this MCP server provides basic way to get information about test cases and projects in QA Sphere. 
+Currently this MCP server provides basic way to get information about test cases (tags, folders) and projects in QA Sphere. 

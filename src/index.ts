@@ -6,7 +6,7 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { z } from "zod";
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { Project, TestCase, TestCasesListResponse } from './types.js';
+import { Project, TestCase, TestCasesListResponse, TestFolderListResponse } from './types.js';
 import { JSONStringify } from './utils.js';
 import { LoggingTransport } from './LoggingTransport.js';
 
@@ -113,7 +113,7 @@ server.tool(
 
 server.tool(
   'list_projects',
-  `Get a list of all projects from QA Sphere (qasphere.com)`,
+  `Get a list of all projects from current QA Sphere TMS account (qasphere.com)`,
   {},
   async () => {
     try {
@@ -252,6 +252,136 @@ server.tool(
           throw new Error(`Project with code '${projectCode}' not found.`);
         }
         throw new Error(`Failed to fetch test cases: ${error.response?.data?.message || error.message}`);
+      }
+      throw error;
+    }
+  }
+);
+
+server.tool(
+  'list_test_cases_folders',
+  'List folders for test cases within a specific QA Sphere project. Allows pagination and sorting.',
+  {
+    projectCode: z.string().regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)'),
+    page: z.number().optional(),
+    limit: z.number().optional().default(100),
+    sortField: z.enum(['id', 'project_id', 'title', 'pos', 'parent_id', 'created_at', 'updated_at']).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
+  },
+  async ({ 
+    projectCode, 
+    page, 
+    limit = 100, 
+    sortField, 
+    sortOrder 
+  }) => {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (page !== undefined) params.append('page', page.toString());
+      if (limit !== undefined) params.append('limit', limit.toString());
+      if (sortField) params.append('sortField', sortField);
+      if (sortOrder) params.append('sortOrder', sortOrder);
+      
+      const url = `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectCode}/tcase/folders`;
+      
+      const response = await axios.get<TestFolderListResponse>(
+        url,
+        {
+          params,
+          headers: {
+            'Authorization': `ApiKey ${QASPHERE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const folderList = response.data;
+
+      // Basic validation of response
+      if (!folderList || !Array.isArray(folderList.data)) {
+        throw new Error('Invalid response: expected a list of folders');
+      }
+      
+      // check for other fields from TestFolderListResponse
+      if (folderList.total === undefined || folderList.page === undefined || folderList.limit === undefined) {
+        throw new Error('Invalid response: missing required fields (total, page, or limit)');
+      }
+
+      // if array is non-empty check if object has id and title fields
+      if (folderList.data.length > 0) {
+        const firstFolder = folderList.data[0];
+        if (firstFolder.id === undefined || !firstFolder.title) {
+          throw new Error('Invalid folder data: missing required fields (id or title)');
+        }
+      }
+      
+      return {
+        content: [{ 
+          type: "text", 
+          text: JSON.stringify(folderList) // Use standard stringify, no special mapping needed for folders
+        }],
+      };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          throw new Error(`Project with code '${projectCode}' not found.`);
+        }
+        throw new Error(`Failed to fetch test case folders: ${error.response?.data?.message || error.message}`);
+      }
+      throw error;
+    }
+  }
+);
+
+server.tool(
+  'list_test_cases_tags',
+  'List all tags defined within a specific QA Sphere project.',
+  {
+    projectCode: z.string().regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)'),
+  },
+  async ({ projectCode }: { projectCode: string }) => {
+    try {
+      const url = `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectCode}/tag`;
+      
+      const response = await axios.get<{ tags: Array<{ id: number; title: string }> }>(
+        url,
+        {
+          headers: {
+            'Authorization': `ApiKey ${QASPHERE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const tagsData = response.data;
+
+      // Basic validation of response
+      if (!tagsData || !Array.isArray(tagsData.tags)) {
+        throw new Error('Invalid response: expected an object with a "tags" array');
+      }
+      
+      // if array is non-empty check if object has id and title fields
+      if (tagsData.tags.length > 0) {
+        const firstTag = tagsData.tags[0];
+        if (firstTag.id === undefined || !firstTag.title) {
+          throw new Error('Invalid tag data: missing required fields (id or title)');
+        }
+      }
+      
+      return {
+        content: [{ 
+          type: "text", 
+          text: JSON.stringify(tagsData) // Use standard stringify
+        }],
+      };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          throw new Error(`Project with identifier '${projectCode}' not found.`);
+        }
+        throw new Error(`Failed to fetch project tags: ${error.response?.data?.message || error.message}`);
       }
       throw error;
     }

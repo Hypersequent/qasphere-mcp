@@ -73,3 +73,19 @@ export interface Project {
   updatedAt: string;
   archivedAt: string | null;
 }
+
+export interface TestFolder {
+  id: number;         // Unique identifier for the folder
+  title: string;      // Name of the folder
+  comment: string;    // Additional notes or description
+  pos: number;        // Position of the folder among its siblings
+  parentId: number;   // ID of the parent folder (0 for root folders)
+  projectId: string;  // ID of the project the folder belongs to
+}
+
+export interface TestFolderListResponse {
+  total: number;      // Total number of items available
+  page: number;       // Current page number
+  limit: number;      // Number of items per page
+  data: TestFolder[]; // Array of folder objects
+}
