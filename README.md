@@ -1,23 +1,42 @@
 # QA Sphere MCP Server
-A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/).
 
-This server provides integration with QA Sphere test management system through MCP, allowing LLMs to interact with QA Sphere test cases.
+A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/) test management system.
 
-## Getting Started 
-### Prerequisites
+This integration enables Large Language Models (LLMs) to interact directly with QA Sphere test cases, allowing you to discover, summarize, and chat about test cases. In AI-powered IDEs that support MCP, you can reference specific QA Sphere test cases within your development workflow.
 
-- Node.js environment (recent version)
+## Prerequisites
+
+- Node.js (recent LTS versions)
 - QA Sphere account with API access
-- Environment variables for QA Sphere authentication:
-  - `QASPHERE_TENANT_URL`: Your company's QA Sphere URL (e.g., `example.eu2.qasphere.com`)
-  - `QASPHERE_API_KEY`: API key from QA Sphere (Settings → API Keys → Add API Key)
+- API key from QA Sphere (Settings ⚙️ → API Keys → Add API Key)
+- Your company's QA Sphere URL (e.g., `example.eu2.qasphere.com`)
 
-### MCP Clients
+## Setup Instructions
 
-Theoretically, any MCP client should work with QA Sphere MCP. 
+This server is compatible with any MCP client. Configuration instructions for popular clients are provided below.
 
 ### Claude Desktop
-To set up Claude Desktop as a QA Sphere MCP client, go to `Claude` → `Settings` → `Developer` → `Edit Config` → `claude_desktop_config.json` and add the following:
+
+1. Navigate to `Claude` → `Settings` → `Developer` → `Edit Config`
+2. Open `claude_desktop_config.json`
+3. Add the QA Sphere configuration to the `mcpServers` dictionary
+
+### Cursor
+
+1. Go to `Settings...` → `Cursor settings` → `Add new global MCP server`
+2. Add the QA Sphere configuration
+
+### 5ire
+
+1. Open 'Tools' and press 'New'
+2. Complete the form with:
+   - Tool key: `qasphere`
+   - Command: `npx -y qasphere-mcp`
+   - Environment variables (see below)
+
+### Configuration Template
+
+For any MCP client, use the following configuration format:
 
 ```json
 {
@@ -28,14 +47,20 @@ To set up Claude Desktop as a QA Sphere MCP client, go to `Claude` → `Settings
         "-y", "qasphere-mcp"
       ],
       "env": {
-        "QASPHERE_TENANT_URL": "%MYTEAM%.%REGION%.qasphere.com",
-        "QASPHERE_API_KEY": "%MY_TOKEN%"
+        "QASPHERE_TENANT_URL": "your-company.region.qasphere.com",
+        "QASPHERE_API_KEY": "your-api-key"
       }
     }
   }
 }
 ```
 
-## Interactions 
+Replace the placeholder values with your actual QA Sphere URL and API key.
 
-Currently this MCP server provides basic way to get information about test cases (tags, folders) and projects in QA Sphere. 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+If you encounter any issues or need assistance, please file an issue on the GitHub repository.

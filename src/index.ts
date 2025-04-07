@@ -154,7 +154,7 @@ server.tool(
 
 server.tool(
   'list_test_cases',
-  `List test cases from a project in QA Sphere. Supports pagination and various filtering options.`,
+  `List test cases from a project in QA Sphere. Supports pagination and various filtering options. Usually it makes sense to call get_project tool first to get the project context.`,
   {
     projectCode: z.string().regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)'),
     page: z.number().optional(),
