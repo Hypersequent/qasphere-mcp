@@ -4,6 +4,10 @@ A [Model Context Protocol](https://github.com/modelcontextprotocol) server for t
 
 This integration enables Large Language Models (LLMs) to interact directly with QA Sphere test cases, allowing you to discover, summarize, and chat about test cases. In AI-powered IDEs that support MCP, you can reference specific QA Sphere test cases within your development workflow.
 
+<a href="https://glama.ai/mcp/servers/@Hypersequent/qasphere-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@Hypersequent/qasphere-mcp/badge" alt="qasphere-mcp MCP server" />
+</a>
+
 ## Prerequisites
 
 - Node.js (recent LTS versions)
