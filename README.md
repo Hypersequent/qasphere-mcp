@@ -23,8 +23,16 @@ This server is compatible with any MCP client. Configuration instructions for po
 
 ### Cursor
 
+#### Option 1: Manual Configuration
+
 1. Go to `Settings...` → `Cursor settings` → `Add new global MCP server`
 2. Add the QA Sphere configuration
+
+#### Option 2: Quick Install
+
+Click the button below to automatically install and configure the QA Sphere MCP server:
+
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=qasphere&config=eyJjb21tYW5kIjoibnB4IC15IHFhc3BoZXJlLW1jcCIsImVudiI6eyJRQVNQSEVSRV9URU5BTlRfVVJMIjoieW91ci1jb21wYW55LnJlZ2lvbi5xYXNwaGVyZS5jb20iLCJRQVNQSEVSRV9BUElfS0VZIjoieW91ci1hcGkta2V5In19)
 
 ### 5ire
 
@@ -43,9 +51,7 @@ For any MCP client, use the following configuration format:
   "mcpServers": {
     "qasphere": {
       "command": "npx",
-      "args": [
-        "-y", "qasphere-mcp"
-      ],
+      "args": ["-y", "qasphere-mcp"],
       "env": {
         "QASPHERE_TENANT_URL": "your-company.region.qasphere.com",
         "QASPHERE_API_KEY": "your-api-key"
