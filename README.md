@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/hypersequent-qasphere-mcp-badge.png)](https://mseep.ai/app/hypersequent-qasphere-mcp)
+
 # QA Sphere MCP Server
 
 A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/) test management system.
