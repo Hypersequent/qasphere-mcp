@@ -1,6 +1,6 @@
 # QA Sphere MCP Server
-[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/Hypersequent/qasphere-mcp)](https://archestra.ai/mcp-catalog/hypersequent__qasphere-mcp)
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/Hypersequent/qasphere-mcp)](https://archestra.ai/mcp-catalog/hypersequent__qasphere-mcp)
 A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/) test management system.
 
 This integration enables Large Language Models (LLMs) to interact directly with QA Sphere test cases, allowing you to discover, summarize, and chat about test cases. In AI-powered IDEs that support MCP, you can reference specific QA Sphere test cases within your development workflow.
