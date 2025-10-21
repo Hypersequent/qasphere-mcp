@@ -89,3 +89,16 @@ export interface TestFolderListResponse {
   limit: number // Number of items per page
   data: TestFolder[] // Array of folder objects
 }
+
+export interface BulkUpsertFolderRequest {
+  path: string[] // Array of folder names representing the hierarchy
+  comment?: string // Additional notes or description for the leaf folder (HTML format)
+}
+
+export interface BulkUpsertFoldersRequest {
+  folders: BulkUpsertFolderRequest[] // Array of folder requests
+}
+
+export interface BulkUpsertFoldersResponse {
+  ids: number[][] // Each array represents the full folder path hierarchy as an array of folder IDs
+}
