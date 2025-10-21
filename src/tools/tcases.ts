@@ -2,7 +2,12 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
 import { JSONStringify } from '../utils'
 import axios from 'axios'
 import { z } from 'zod'
-import type { TestCase, TestCasesListResponse } from '../types'
+import type {
+  TestCase,
+  TestCasesListResponse,
+  CreateTestCaseRequest,
+  CreateTestCaseResponse,
+} from '../types'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config'
 
 export const registerTools = (server: McpServer) => {
@@ -188,6 +193,168 @@ export const registerTools = (server: McpServer) => {
           throw new Error(
             `Failed to fetch test cases: ${error.response?.data?.message || error.message}`
           )
+        }
+        throw error
+      }
+    }
+  )
+
+  server.tool(
+    'create_test_case',
+    'Create a new test case in QA Sphere. Supports both standalone and template test cases with various options like steps, tags, requirements, and parameter values for templates.',
+    {
+      projectId: z
+        .string()
+        .regex(/^[A-Z0-9]+$/, 'Project ID must be in format PROJECT_CODE (e.g., BDI)')
+        .describe(
+          'Project identifier (can be either the project code or UUID). Use list_projects tool to get the project code.'
+        ),
+      title: z
+        .string()
+        .min(1, 'Title must be at least 1 character')
+        .max(511, 'Title must be at most 511 characters')
+        .describe('Test case title'),
+      type: z
+        .enum(['standalone', 'template'])
+        .describe('Type of test case (standalone or template)'),
+      folderId: z
+        .number()
+        .int()
+        .positive('Folder ID must be a positive integer')
+        .describe(
+          'ID of the folder where the test case will be placed. Use bulk_upsert_folders tool to create new folders or get existing folders.'
+        ),
+      priority: z.enum(['high', 'medium', 'low']).describe('Test case priority'),
+      pos: z
+        .number()
+        .int()
+        .min(0, 'Position must be non-negative')
+        .optional()
+        .describe('Position within the folder (0-based index)'),
+      comment: z.string().optional().describe('Test case precondition (HTML format)'),
+      steps: z
+        .array(
+          z.object({
+            sharedStepId: z
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe('Unique identifier of the shared step'),
+            description: z.string().optional().describe('Details of steps (HTML format)'),
+            expected: z.string().optional().describe('Expected result from the step (HTML format)'),
+          })
+        )
+        .optional()
+        .describe('List of test case steps'),
+      tags: z
+        .array(z.string().max(255, 'Tag title must be at most 255 characters'))
+        .optional()
+        .describe('List of tag titles'),
+      requirements: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Requirement text must be at least 1 character')
+              .max(255, 'Requirement text must be at most 255 characters')
+              .describe('Title of the requirement'),
+            url: z
+              .string()
+              .min(1, 'Requirement URL must be at least 1 character')
+              .max(255, 'Requirement URL must be at most 255 characters')
+              .url('Requirement URL must be a valid URL')
+              .describe('URL of the requirement'),
+          })
+        )
+        .optional()
+        .describe('Test case requirements'),
+      links: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Link text must be at least 1 character')
+              .max(255, 'Link text must be at most 255 characters')
+              .describe('Title of the link'),
+            url: z
+              .string()
+              .min(1, 'Link URL must be at least 1 character')
+              .max(255, 'Link URL must be at most 255 characters')
+              .url('Link URL must be a valid URL')
+              .describe('URL of the link'),
+          })
+        )
+        .optional()
+        .describe('Additional links relevant to the test case'),
+      parameterValues: z
+        .array(
+          z.object({
+            values: z
+              .record(z.string())
+              .describe('Values for the parameters in the template test case'),
+          })
+        )
+        .optional()
+        .describe('Values to substitute for parameters in template test cases'),
+      filledTCaseTitleSuffixParams: z
+        .array(z.string())
+        .optional()
+        .describe('Parameters to append to filled test case titles'),
+      isDraft: z.boolean().optional().default(false).describe('Whether to create as draft'),
+    },
+    async ({ projectId, ...tcaseParams }) => {
+      try {
+        const requestData: CreateTestCaseRequest = {
+          ...tcaseParams,
+        }
+
+        const response = await axios.post<CreateTestCaseResponse>(
+          `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectId}/tcase`,
+          requestData,
+          {
+            headers: {
+              Authorization: `ApiKey ${QASPHERE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        const result = response.data
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result),
+            },
+          ],
+        }
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status
+          const message = error.response?.data?.message || error.message
+
+          if (status === 400) {
+            throw new Error(`Invalid request data: ${message}`)
+          }
+          if (status === 401) {
+            throw new Error('Invalid or missing API key')
+          }
+          if (status === 403) {
+            throw new Error('Insufficient permissions or suspended tenant')
+          }
+          if (status === 404) {
+            throw new Error(`Project or folder not found: ${message}`)
+          }
+          if (status === 409) {
+            throw new Error(`Position conflict or duplicate requirement: ${message}`)
+          }
+          if (status === 500) {
+            throw new Error('Internal server error while creating test case')
+          }
+
+          throw new Error(`Failed to create test case: ${message}`)
         }
         throw error
       }

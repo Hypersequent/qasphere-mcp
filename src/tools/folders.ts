@@ -96,7 +96,7 @@ export const registerTools = (server: McpServer) => {
 
   server.tool(
     'bulk_upsert_folders',
-    "Creates or updates multiple folders in a single request using folder path hierarchies. Automatically creates nested folder structures and updates existing folders' comments.",
+    "Creates or updates multiple folders in a single request using folder path hierarchies. Automatically creates nested folder structures and updates existing folders' comments. Returns an array of folder ID arrays, each representing the full folder path hierarchy as an array of folder IDs.",
     {
       projectCode: z
         .string()

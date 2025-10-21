@@ -102,3 +102,51 @@ export interface BulkUpsertFoldersRequest {
 export interface BulkUpsertFoldersResponse {
   ids: number[][] // Each array represents the full folder path hierarchy as an array of folder IDs
 }
+
+// Create Test Case API Types
+export interface CreateTestCaseStep {
+  sharedStepId?: number // For shared steps
+  description?: string // For standalone steps
+  expected?: string // For standalone steps
+}
+
+export interface CreateTestCaseRequirement {
+  text: string // Title of the requirement (1-255 characters)
+  url: string // URL of the requirement (1-255 characters)
+}
+
+export interface CreateTestCaseLink {
+  text: string // Title of the link (1-255 characters)
+  url: string // URL of the link (1-255 characters)
+}
+
+export interface CreateTestCaseCustomField {
+  isDefault: boolean // Whether to set the default value
+  value: string // Custom field value to be set
+}
+
+export interface CreateTestCaseParameterValue {
+  values: { [key: string]: string } // Values for the parameters in the template test case
+}
+
+export interface CreateTestCaseRequest {
+  title: string // Required: Test case title (1-511 characters)
+  type: 'standalone' | 'template' // Required: Type of test case
+  folderId: number // Required: ID of the folder where the test case will be placed
+  priority: 'high' | 'medium' | 'low' // Required: Test case priority
+  pos?: number // Optional: Position within the folder (0-based index)
+  comment?: string // Optional: Test case precondition (HTML)
+  steps?: CreateTestCaseStep[] // Optional: List of test case steps
+  tags?: string[] // Optional: List of tag titles (max 255 characters each)
+  requirements?: CreateTestCaseRequirement[] // Optional: Test case requirements
+  links?: CreateTestCaseLink[] // Optional: Additional links relevant to the test case
+  customFields?: { [key: string]: CreateTestCaseCustomField } // Optional: Custom field values
+  parameterValues?: CreateTestCaseParameterValue[] // Optional: Values to substitute for parameters in template test cases
+  filledTCaseTitleSuffixParams?: string[] // Optional: Parameters to append to filled test case titles
+  isDraft?: boolean // Whether to create as draft, default false
+}
+
+export interface CreateTestCaseResponse {
+  id: string // Unique identifier of the created test case
+  seq: number // Sequence number of the test case in the project
+}
