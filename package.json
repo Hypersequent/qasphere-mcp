@@ -41,6 +41,6 @@
   },
   "lint-staged": {
     "*.{ts,js}": ["biome lint --write", "biome format --write"],
-    "*.json": "biome format --write"
+    "*.json": "biome format --write --no-errors-on-unmatched"
   }
 }
