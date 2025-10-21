@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
 import axios from 'axios'
 import { z } from 'zod'
-import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config'
+import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(

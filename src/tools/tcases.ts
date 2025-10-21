@@ -1,5 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
-import { JSONStringify } from '../utils'
 import axios from 'axios'
 import { z } from 'zod'
 import type {
@@ -7,8 +6,9 @@ import type {
   TestCasesListResponse,
   CreateTestCaseRequest,
   CreateTestCaseResponse,
-} from '../types'
-import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config'
+} from '../types.js'
+import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
+import { JSONStringify } from '../utils.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(
