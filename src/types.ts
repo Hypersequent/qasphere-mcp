@@ -150,3 +150,47 @@ export interface CreateTestCaseResponse {
   id: string // Unique identifier of the created test case
   seq: number // Sequence number of the test case in the project
 }
+
+// Update Test Case API Types
+export interface UpdateTestCaseStep {
+  sharedStepId?: number // For shared steps
+  description?: string // For standalone steps
+  expected?: string // For standalone steps
+}
+
+export interface UpdateTestCaseRequirement {
+  text: string // Title of the requirement (1-255 characters)
+  url: string // URL of the requirement (1-255 characters)
+}
+
+export interface UpdateTestCaseLink {
+  text: string // Title of the link (1-255 characters)
+  url: string // URL of the link (1-255 characters)
+}
+
+export interface UpdateTestCaseCustomField {
+  isDefault: boolean // Whether to set the default value
+  value: string // Custom field value to be set
+}
+
+export interface UpdateTestCaseParameterValue {
+  tcaseId?: string // Should be specified to update existing filled test case
+  values: { [key: string]: string } // Values for the parameters in the template test case
+}
+
+export interface UpdateTestCaseRequest {
+  title?: string // Optional: Test case title (1-511 characters)
+  priority?: 'high' | 'medium' | 'low' // Optional: Test case priority
+  comment?: string // Optional: Test case precondition (HTML)
+  isDraft?: boolean // Optional: To publish a draft test case
+  steps?: UpdateTestCaseStep[] // Optional: List of test case steps
+  tags?: string[] // Optional: List of tag titles (max 255 characters each)
+  requirements?: UpdateTestCaseRequirement[] // Optional: Test case requirements
+  links?: UpdateTestCaseLink[] // Optional: Additional links relevant to the test case
+  customFields?: { [key: string]: UpdateTestCaseCustomField } // Optional: Custom field values
+  parameterValues?: UpdateTestCaseParameterValue[] // Optional: Values to substitute for parameters in template test cases
+}
+
+export interface UpdateTestCaseResponse {
+  message: string // Success message
+}

@@ -6,6 +6,8 @@ import type {
   TestCasesListResponse,
   CreateTestCaseRequest,
   CreateTestCaseResponse,
+  UpdateTestCaseRequest,
+  UpdateTestCaseResponse,
 } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 import { JSONStringify } from '../utils.js'
@@ -355,6 +357,158 @@ export const registerTools = (server: McpServer) => {
           }
 
           throw new Error(`Failed to create test case: ${message}`)
+        }
+        throw error
+      }
+    }
+  )
+
+  server.tool(
+    'update_test_case',
+    'Update an existing test case in QA Sphere. Only users with role User or higher are allowed to update test cases. Optional fields can be omitted to keep the current value.',
+    {
+      projectId: z
+        .string()
+        .regex(/^[A-Z0-9]+$/, 'Project ID must be in format PROJECT_CODE (e.g., BDI)')
+        .describe('Project identifier (can be either the project code or UUID)'),
+      tcaseOrLegacyId: z
+        .string()
+        .describe('Test case identifier (can be one of test case UUID, sequence or legacy ID)'),
+      title: z
+        .string()
+        .min(1, 'Title must be at least 1 character')
+        .max(511, 'Title must be at most 511 characters')
+        .optional()
+        .describe('Test case title'),
+      priority: z.enum(['high', 'medium', 'low']).optional().describe('Test case priority'),
+      comment: z.string().optional().describe('Test case precondition (HTML format)'),
+      isDraft: z
+        .boolean()
+        .optional()
+        .describe(
+          'To publish a draft test case. A published test case cannot be converted to draft'
+        ),
+      steps: z
+        .array(
+          z.object({
+            sharedStepId: z
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe('Unique identifier of the shared step'),
+            description: z.string().optional().describe('Details of steps (HTML format)'),
+            expected: z.string().optional().describe('Expected result from the step (HTML format)'),
+          })
+        )
+        .optional()
+        .describe('List of test case steps'),
+      tags: z
+        .array(z.string().max(255, 'Tag title must be at most 255 characters'))
+        .optional()
+        .describe('List of tag titles'),
+      requirements: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Requirement text must be at least 1 character')
+              .max(255, 'Requirement text must be at most 255 characters')
+              .describe('Title of the requirement'),
+            url: z
+              .string()
+              .min(1, 'Requirement URL must be at least 1 character')
+              .max(255, 'Requirement URL must be at most 255 characters')
+              .url('Requirement URL must be a valid URL')
+              .describe('URL of the requirement'),
+          })
+        )
+        .optional()
+        .describe('Test case requirements'),
+      links: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Link text must be at least 1 character')
+              .max(255, 'Link text must be at most 255 characters')
+              .describe('Title of the link'),
+            url: z
+              .string()
+              .min(1, 'Link URL must be at least 1 character')
+              .max(255, 'Link URL must be at most 255 characters')
+              .url('Link URL must be a valid URL')
+              .describe('URL of the link'),
+          })
+        )
+        .optional()
+        .describe('Additional links relevant to the test case'),
+      parameterValues: z
+        .array(
+          z.object({
+            tcaseId: z
+              .string()
+              .optional()
+              .describe('Should be specified to update existing filled test case'),
+            values: z
+              .record(z.string())
+              .describe('Values for the parameters in the template test case'),
+          })
+        )
+        .optional()
+        .describe('Values to substitute for parameters in template test cases'),
+    },
+    async ({ projectId, tcaseOrLegacyId, ...updateParams }) => {
+      try {
+        const requestData: UpdateTestCaseRequest = {
+          ...updateParams,
+        }
+
+        const response = await axios.patch<UpdateTestCaseResponse>(
+          `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectId}/tcase/${tcaseOrLegacyId}`,
+          requestData,
+          {
+            headers: {
+              Authorization: `ApiKey ${QASPHERE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        const result = response.data
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result),
+            },
+          ],
+        }
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status
+          const message = error.response?.data?.message || error.message
+
+          if (status === 400) {
+            throw new Error(
+              `Invalid request data or converting a published test case to draft: ${message}`
+            )
+          }
+          if (status === 401) {
+            throw new Error('Invalid or missing API key')
+          }
+          if (status === 403) {
+            throw new Error('Insufficient permissions or suspended tenant')
+          }
+          if (status === 404) {
+            throw new Error(`Project or test case not found: ${message}`)
+          }
+          if (status === 500) {
+            throw new Error('Internal server error while updating test case')
+          }
+
+          throw new Error(`Failed to update test case: ${message}`)
         }
         throw error
       }
