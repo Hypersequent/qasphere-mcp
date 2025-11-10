@@ -10,7 +10,7 @@ import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(
-    'list_test_cases_folders',
+    'list_folders',
     'List folders for test cases within a specific QA Sphere project. Allows pagination and sorting.',
     {
       projectCode: z

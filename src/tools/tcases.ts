@@ -19,7 +19,10 @@ export const registerTools = (server: McpServer) => {
     {
       marker: z
         .string()
-        .regex(/^[A-Z0-9]+-\d+$/, 'Marker must be in format PROJECT_CODE-SEQUENCE (e.g., BDI-123)')
+        .regex(
+          /^[A-Z0-9]{2,5}-\d+$/,
+          'Marker must be in format PROJECT_CODE-SEQUENCE (e.g., BDI-123). Project code must be 2 to 5 characters in format PROJECT_CODE (e.g., BDI). Sequence must be a number.'
+        )
         .describe('Test case marker in format PROJECT_CODE-SEQUENCE (e.g., BDI-123)'),
     },
     async ({ marker }: { marker: string }) => {
@@ -38,7 +41,7 @@ export const registerTools = (server: McpServer) => {
         const testCase = response.data
 
         // Sanity check for required fields
-        if (!testCase.id || !testCase.title || !testCase.version === undefined) {
+        if (!testCase.id || !testCase.title || testCase.version) {
           throw new Error('Invalid test case data: missing required fields (id, title, or version)')
         }
 
@@ -70,7 +73,10 @@ export const registerTools = (server: McpServer) => {
     {
       projectCode: z
         .string()
-        .regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)')
+        .regex(
+          /^[A-Z0-9]{2,5}$/,
+          'Project code must be 2 to 5 characters in format PROJECT_CODE (e.g., BDI)'
+        )
         .describe('Project code identifier (e.g., BDI)'),
       page: z.number().optional().describe('Page number for pagination'),
       limit: z.number().optional().default(20).describe('Number of items per page'),
