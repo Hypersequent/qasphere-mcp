@@ -34,7 +34,7 @@ export const registerTools = (server: McpServer) => {
         const testCase = response.data
 
         // Sanity check for required fields
-        if (!testCase.id || !testCase.title || !testCase.version === undefined) {
+        if (!testCase.id || !testCase.title || testCase.version) {
           throw new Error('Invalid test case data: missing required fields (id, title, or version)')
         }
 
