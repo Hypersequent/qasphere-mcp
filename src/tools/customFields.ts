@@ -27,24 +27,24 @@ export const registerTools = (server: McpServer) => {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(response.data),
+              text: JSON.stringify(response.data.customFields),
             },
           ],
         }
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          if (error.response?.status === 404) {
-            throw new Error(`Project with code '${projectCode}' not found.`)
+          switch (error.response?.status) {
+            case 404:
+              throw new Error(`Project with code '${projectCode}' not found.`)
+            case 401:
+              throw new Error('Invalid or missing API key')
+            case 403:
+              throw new Error('Insufficient permissions or suspended tenant')
+            default:
+              throw new Error(
+                `Failed to fetch custom fields: ${error.response?.data?.message || error.message}`
+              )
           }
-          if (error.response?.status === 401) {
-            throw new Error('Invalid or missing API key')
-          }
-          if (error.response?.status === 403) {
-            throw new Error('Insufficient permissions or suspended tenant')
-          }
-          throw new Error(
-            `Failed to fetch custom fields: ${error.response?.data?.message || error.message}`
-          )
         }
         throw error
       }

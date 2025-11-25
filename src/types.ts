@@ -120,7 +120,7 @@ export interface CreateTestCaseLink {
   url: string // URL of the link (1-255 characters)
 }
 
-export interface CreateTestCaseCustomField {
+export interface TestCaseCustomFieldValue {
   isDefault?: boolean // Whether to set the default value (if true, the value field is ignored)
   value?: string // Custom field value to be set. For text fields: any string value. For dropdown fields: must match one of the option value strings.
 }
@@ -140,7 +140,7 @@ export interface CreateTestCaseRequest {
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
   requirements?: CreateTestCaseRequirement[] // Optional: Test case requirements
   links?: CreateTestCaseLink[] // Optional: Additional links relevant to the test case
-  customFields?: { [key: string]: CreateTestCaseCustomField } // Optional: Custom field values
+  customFields?: { [key: string]: TestCaseCustomFieldValue } // Optional: Custom field values
   parameterValues?: CreateTestCaseParameterValue[] // Optional: Values to substitute for parameters in template test cases
   filledTCaseTitleSuffixParams?: string[] // Optional: Parameters to append to filled test case titles
   isDraft?: boolean // Whether to create as draft, default false
@@ -168,11 +168,6 @@ export interface UpdateTestCaseLink {
   url: string // URL of the link (1-255 characters)
 }
 
-export interface UpdateTestCaseCustomField {
-  isDefault?: boolean // Whether to set the default value (if true, the value field is ignored)
-  value?: string // Custom field value to be set. For text fields: any string value. For dropdown fields: must match one of the option value strings.
-}
-
 export interface UpdateTestCaseParameterValue {
   tcaseId?: string // Should be specified to update existing filled test case
   values: { [key: string]: string } // Values for the parameters in the template test case
@@ -187,7 +182,7 @@ export interface UpdateTestCaseRequest {
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
   requirements?: UpdateTestCaseRequirement[] // Optional: Test case requirements
   links?: UpdateTestCaseLink[] // Optional: Additional links relevant to the test case
-  customFields?: { [key: string]: UpdateTestCaseCustomField } // Optional: Custom field values
+  customFields?: { [key: string]: TestCaseCustomFieldValue } // Optional: Custom field values
   parameterValues?: UpdateTestCaseParameterValue[] // Optional: Values to substitute for parameters in template test cases
 }
 
