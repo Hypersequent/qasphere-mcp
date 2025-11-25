@@ -3,6 +3,17 @@ export interface TestStep {
   expected: string
 }
 
+export interface TestPrecondition {
+  id: number // Unique identifier of the precondition
+  version: number // Version of the precondition
+  title: string // Title of the precondition
+  text: string // Precondition text content
+  type: 'shared' | 'standalone' // Type of precondition (shared across tests or standalone)
+  isLatest: boolean // Whether this is the latest version of the precondition
+  createdAt: string // Precondition creation time (ISO 8601 format)
+  updatedAt: string // Precondition update time (ISO 8601 format)
+}
+
 export interface TestTag {
   id: number
   title: string
@@ -36,7 +47,11 @@ export interface TestCase {
   folderId: number // Identifier of the folder where the test case is placed
   pos: number // Ordered position (0 based) of the test case in its folder
   priority: 'high' | 'medium' | 'low' // Priority of the test case
-  comment: string // Test description/precondition
+  /**
+   * @deprecated Use `precondition` instead. This field is kept for backward compatibility.
+   */
+  comment: string // Test description/precondition (deprecated - use precondition instead)
+  precondition?: TestPrecondition // Test precondition and setup requirements
   steps: TestStep[] // List of test case steps
   tags: TestTag[] // List of test case tags
   files: TestFile[] // List of files attached to the test case
@@ -103,6 +118,11 @@ export interface BulkUpsertFoldersResponse {
   ids: number[][] // Each array represents the full folder path hierarchy as an array of folder IDs
 }
 
+// Request type for test case precondition - either reference by ID or provide text
+export type TestPreconditionRequest =
+  | { id: number } // Reference an existing shared precondition by ID
+  | { text: string } // Provide standalone precondition text
+
 // Create Test Case API Types
 export interface CreateTestCaseStep {
   sharedStepId?: number // For shared steps
@@ -135,7 +155,11 @@ export interface CreateTestCaseRequest {
   folderId: number // Required: ID of the folder where the test case will be placed
   priority: 'high' | 'medium' | 'low' // Required: Test case priority
   pos?: number // Optional: Position within the folder (0-based index)
+  /**
+   * @deprecated Use `precondition` instead. This field is kept for backward compatibility.
+   */
   comment?: string // Optional: Test case precondition (HTML)
+  precondition?: TestPreconditionRequest // Optional: Test case precondition
   steps?: CreateTestCaseStep[] // Optional: List of test case steps
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
   requirements?: CreateTestCaseRequirement[] // Optional: Test case requirements
@@ -181,7 +205,11 @@ export interface UpdateTestCaseParameterValue {
 export interface UpdateTestCaseRequest {
   title?: string // Optional: Test case title (1-511 characters)
   priority?: 'high' | 'medium' | 'low' // Optional: Test case priority
+  /**
+   * @deprecated Use `precondition` instead. This field is kept for backward compatibility.
+   */
   comment?: string // Optional: Test case precondition (HTML)
+  precondition?: TestPreconditionRequest // Optional: Test case precondition
   isDraft?: boolean // Optional: To publish a draft test case
   steps?: UpdateTestCaseStep[] // Optional: List of test case steps
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
