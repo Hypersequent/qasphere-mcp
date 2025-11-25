@@ -121,8 +121,8 @@ export interface CreateTestCaseLink {
 }
 
 export interface TestCaseCustomFieldValue {
-  isDefault?: boolean // Whether to set the default value (if true, the value field is ignored)
-  value?: string // Custom field value to be set. For text fields: any string value. For dropdown fields: must match one of the option value strings.
+  isDefault?: boolean // Whether to set the default value (if true, the value field should be omitted)
+  value?: string // Custom field value to be set. For text fields: any string value. For dropdown fields: must match one of the option value strings. Omit if 'isDefault' is true.
 }
 
 export interface CreateTestCaseParameterValue {

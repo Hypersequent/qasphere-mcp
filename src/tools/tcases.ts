@@ -514,13 +514,13 @@ const tcaseCustomFieldParamSchema = z
           .string()
           .optional()
           .describe(
-            "The actual value for the field. For text fields: any string value. For dropdown fields: must match one of the option value strings from the field's options array."
+            "The actual value for the field. For text fields: any string value. For dropdown fields: must match one of the option value strings from the field's options array. Omit if 'isDefault' is true."
           ),
         isDefault: z
           .boolean()
           .optional()
           .describe(
-            "Boolean indicating whether to use the field's default value (if true, the value field is ignored)"
+            "Boolean indicating whether to use the field's default value (if true, the value field should be omitted)"
           ),
       })
       .refine((data) => data.value !== undefined || data.isDefault !== undefined, {
