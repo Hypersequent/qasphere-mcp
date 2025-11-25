@@ -1,20 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
 import axios from 'axios'
-import { z } from 'zod'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
+import { projectCodeSchema } from '../schemas.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(
     'list_test_cases_tags',
     'List all tags defined within a specific QA Sphere project.',
     {
-      projectCode: z
-        .string()
-        .regex(
-          /^[A-Z0-9]{2,5}$/,
-          'Marker must be 2 to 5 characters in format PROJECT_CODE (e.g., BDI)'
-        )
-        .describe('Project code identifier (e.g., BDI)'),
+      projectCode: projectCodeSchema,
     },
     async ({ projectCode }: { projectCode: string }) => {
       try {

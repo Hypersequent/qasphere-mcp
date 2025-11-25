@@ -11,19 +11,14 @@ import type {
 } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 import { JSONStringify } from '../utils.js'
+import { projectCodeSchema, testCaseMarkerSchema } from '../schemas.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(
     'get_test_case',
     `Get a test case from QA Sphere using a marker in the format PROJECT_CODE-SEQUENCE (e.g., BDI-123). You can use URLs like: ${QASPHERE_TENANT_URL}/project/%PROJECT_CODE%/tcase/%SEQUENCE%?any Extract %PROJECT_CODE% and %SEQUENCE% from the URL and use them as the marker.`,
     {
-      marker: z
-        .string()
-        .regex(
-          /^[A-Z0-9]{2,5}-\d+$/,
-          'Marker must be in format PROJECT_CODE-SEQUENCE (e.g., BDI-123). Project code must be 2 to 5 characters in format PROJECT_CODE (e.g., BDI). Sequence must be a number.'
-        )
-        .describe('Test case marker in format PROJECT_CODE-SEQUENCE (e.g., BDI-123)'),
+      marker: testCaseMarkerSchema,
     },
     async ({ marker }: { marker: string }) => {
       try {
@@ -41,7 +36,7 @@ export const registerTools = (server: McpServer) => {
         const testCase = response.data
 
         // Sanity check for required fields
-        if (!testCase.id || !testCase.title || testCase.version) {
+        if (!testCase.id || !testCase.title || !testCase.version) {
           throw new Error('Invalid test case data: missing required fields (id, title, or version)')
         }
 
@@ -71,13 +66,7 @@ export const registerTools = (server: McpServer) => {
     'list_test_cases',
     'List test cases from a project in QA Sphere. Supports pagination and various filtering options. Usually it makes sense to call get_project tool first to get the project context.',
     {
-      projectCode: z
-        .string()
-        .regex(
-          /^[A-Z0-9]{2,5}$/,
-          'Project code must be 2 to 5 characters in format PROJECT_CODE (e.g., BDI)'
-        )
-        .describe('Project code identifier (e.g., BDI)'),
+      projectCode: projectCodeSchema,
       page: z.number().optional().describe('Page number for pagination'),
       limit: z.number().optional().default(20).describe('Number of items per page'),
       sortField: z
@@ -211,12 +200,7 @@ export const registerTools = (server: McpServer) => {
     'create_test_case',
     'Create a new test case in QA Sphere. Supports both standalone and template test cases with various options like steps, tags, requirements, and parameter values for templates.',
     {
-      projectId: z
-        .string()
-        .regex(/^[A-Z0-9]+$/, 'Project ID must be in format PROJECT_CODE (e.g., BDI)')
-        .describe(
-          'Project identifier (can be either the project code or UUID). Use list_projects tool to get the project code.'
-        ),
+      projectId: projectCodeSchema,
       title: z
         .string()
         .min(1, 'Title must be at least 1 character')
@@ -373,10 +357,7 @@ export const registerTools = (server: McpServer) => {
     'update_test_case',
     'Update an existing test case in QA Sphere. Only users with role User or higher are allowed to update test cases. Optional fields can be omitted to keep the current value.',
     {
-      projectId: z
-        .string()
-        .regex(/^[A-Z0-9]+$/, 'Project ID must be in format PROJECT_CODE (e.g., BDI)')
-        .describe('Project identifier (can be either the project code or UUID)'),
+      projectId: projectCodeSchema,
       tcaseOrLegacyId: z
         .string()
         .describe('Test case identifier (can be one of test case UUID, sequence or legacy ID)'),

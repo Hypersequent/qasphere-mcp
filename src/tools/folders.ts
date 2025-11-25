@@ -7,16 +7,14 @@ import type {
   BulkUpsertFoldersResponse,
 } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
+import { projectCodeSchema } from '../schemas.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(
     'list_folders',
     'List folders for test cases within a specific QA Sphere project. Allows pagination and sorting.',
     {
-      projectCode: z
-        .string()
-        .regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)')
-        .describe('Project code identifier (e.g., BDI)'),
+      projectCode: projectCodeSchema,
       page: z.number().optional().describe('Page number for pagination'),
       limit: z.number().optional().default(100).describe('Number of items per page'),
       sortField: z
@@ -95,13 +93,10 @@ export const registerTools = (server: McpServer) => {
   )
 
   server.tool(
-    'bulk_upsert_folders',
+    'upsert_folders',
     "Creates or updates multiple folders in a single request using folder path hierarchies. Automatically creates nested folder structures and updates existing folders' comments. Returns an array of folder ID arrays, each representing the full folder path hierarchy as an array of folder IDs.",
     {
-      projectCode: z
-        .string()
-        .regex(/^[A-Z0-9]+$/, 'Project code must be in format PROJECT_CODE (e.g., BDI)')
-        .describe('Project code identifier (e.g., BDI)'),
+      projectCode: projectCodeSchema,
       folders: z
         .array(
           z.object({

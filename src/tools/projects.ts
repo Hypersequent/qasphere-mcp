@@ -3,19 +3,14 @@ import axios from 'axios'
 import { z } from 'zod'
 import type { Project } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
+import { projectCodeSchema } from '../schemas.js'
 
 export const registerTools = (server: McpServer) => {
   server.tool(
     'get_project',
     `Get a project information from QA Sphere using a project code (e.g., BDI). You can extract PROJECT_CODE from URLs ${QASPHERE_TENANT_URL}/project/%PROJECT_CODE%/...`,
     {
-      projectCode: z
-        .string()
-        .regex(
-          /^[A-Z0-9]{2,5}$/,
-          'Marker must be 2 to 5 characters in format PROJECT_CODE (e.g., BDI)'
-        )
-        .describe('Project code identifier (e.g., BDI)'),
+      projectCode: projectCodeSchema,
     },
     async ({ projectCode }: { projectCode: string }) => {
       try {
