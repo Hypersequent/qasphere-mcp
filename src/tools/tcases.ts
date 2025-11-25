@@ -279,6 +279,7 @@ export const registerTools = (server: McpServer) => {
         )
         .optional()
         .describe('Additional links relevant to the test case'),
+      customFields: tcaseCustomFieldParamSchema,
       parameterValues: z
         .array(
           z.object({
@@ -430,6 +431,7 @@ export const registerTools = (server: McpServer) => {
         )
         .optional()
         .describe('Additional links relevant to the test case'),
+      customFields: tcaseCustomFieldParamSchema,
       parameterValues: z
         .array(
           z.object({
@@ -502,3 +504,26 @@ export const registerTools = (server: McpServer) => {
     }
   )
 }
+
+const tcaseCustomFieldParamSchema = z
+  .record(
+    z.string(),
+    z.object({
+      value: z
+        .string()
+        .optional()
+        .describe(
+          "The actual value for the field. For text fields: any string value. For dropdown fields: must match one of the option value strings from the field's options array."
+        ),
+      isDefault: z
+        .boolean()
+        .optional()
+        .describe(
+          "Boolean indicating whether to use the field's default value (if true, the value field is ignored)"
+        ),
+    })
+  )
+  .optional()
+  .describe(
+    'Custom field values. Use the systemName property from custom fields as the key. Only enabled fields should be used. Use list_custom_fields tool to get the custom fields.'
+  )

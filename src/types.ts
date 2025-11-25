@@ -121,8 +121,8 @@ export interface CreateTestCaseLink {
 }
 
 export interface CreateTestCaseCustomField {
-  isDefault: boolean // Whether to set the default value
-  value: string // Custom field value to be set
+  isDefault?: boolean // Whether to set the default value (if true, the value field is ignored)
+  value?: string // Custom field value to be set. For text fields: any string value. For dropdown fields: must match one of the option value strings.
 }
 
 export interface CreateTestCaseParameterValue {
@@ -169,8 +169,8 @@ export interface UpdateTestCaseLink {
 }
 
 export interface UpdateTestCaseCustomField {
-  isDefault: boolean // Whether to set the default value
-  value: string // Custom field value to be set
+  isDefault?: boolean // Whether to set the default value (if true, the value field is ignored)
+  value?: string // Custom field value to be set. For text fields: any string value. For dropdown fields: must match one of the option value strings.
 }
 
 export interface UpdateTestCaseParameterValue {
@@ -193,4 +193,30 @@ export interface UpdateTestCaseRequest {
 
 export interface UpdateTestCaseResponse {
   message: string // Success message
+}
+
+// Custom Fields API Types
+export interface CustomFieldOption {
+  id: string // Option identifier
+  value: string // Option display value
+}
+
+export interface CustomField {
+  id: string // Unique custom field identifier
+  type: 'text' | 'dropdown' // Field type
+  systemName: string // System identifier for the field (used in API requests)
+  name: string // Display name of the field
+  required: boolean // Whether the field is required for test cases
+  enabled: boolean // Whether the field is currently enabled
+  options?: CustomFieldOption[] // Available options (only for dropdown fields)
+  defaultValue?: string // Default value for the field
+  pos: number // Display position/order
+  allowAllProjects: boolean // Whether the field is available to all projects
+  allowedProjectIds?: string[] // List of project IDs if not available to all projects
+  createdAt: string // ISO 8601 timestamp when the field was created
+  updatedAt: string // ISO 8601 timestamp when the field was last updated
+}
+
+export interface CustomFieldsResponse {
+  customFields: CustomField[] // Array of custom fields
 }
