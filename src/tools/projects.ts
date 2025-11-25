@@ -1,6 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
 import axios from 'axios'
-import { z } from 'zod'
 import type { Project } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 import { projectCodeSchema } from '../schemas.js'
