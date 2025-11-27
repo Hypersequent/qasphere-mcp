@@ -155,10 +155,6 @@ export interface CreateTestCaseRequest {
   folderId: number // Required: ID of the folder where the test case will be placed
   priority: 'high' | 'medium' | 'low' // Required: Test case priority
   pos?: number // Optional: Position within the folder (0-based index)
-  /**
-   * @deprecated Use `precondition` instead. This field is kept for backward compatibility.
-   */
-  comment?: string // Optional: Test case precondition (HTML)
   precondition?: TestPreconditionRequest // Optional: Test case precondition
   steps?: CreateTestCaseStep[] // Optional: List of test case steps
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
