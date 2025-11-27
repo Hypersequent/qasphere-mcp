@@ -14,16 +14,13 @@ import { JSONStringify } from '../utils.js'
 import { projectCodeSchema } from '../schemas.js'
 
 export const registerTools = (server: McpServer) => {
-  server.registerTool(
+  server.tool(
     'get_test_case',
+    'Get a test case from QA Sphere using a marker in the format PROJECT_CODE-SEQUENCE (e.g., BDI-123). You can use URLs like: ${QASPHERE_TENANT_URL}/project/%PROJECT_CODE%/tcase/%SEQUENCE%?any Extract %PROJECT_CODE% and %SEQUENCE% from the URL and use them as the marker.',
     {
-      description:
-        'Get a test case from QA Sphere using a marker in the format PROJECT_CODE-SEQUENCE (e.g., BDI-123). You can use URLs like: ${QASPHERE_TENANT_URL}/project/%PROJECT_CODE%/tcase/%SEQUENCE%?any Extract %PROJECT_CODE% and %SEQUENCE% from the URL and use them as the marker.',
-      inputSchema: z.object({
-        marker: testCaseMarkerSchema,
-      }),
+      marker: testCaseMarkerSchema,
     },
-    async ({ marker }) => {
+    async ({ marker }: { marker: string }) => {
       try {
         const [projectId, sequence] = marker.split('-')
         const response = await axios.get<TestCase>(
@@ -64,47 +61,44 @@ export const registerTools = (server: McpServer) => {
     }
   )
 
-  server.registerTool(
+  server.tool(
     'list_test_cases',
+    'List test cases from a project in QA Sphere. Supports pagination and various filtering options. Usually it makes sense to call get_project tool first to get the project context.',
     {
-      description:
-        'List test cases from a project in QA Sphere. Supports pagination and various filtering options. Usually it makes sense to call get_project tool first to get the project context.',
-      inputSchema: z.object({
-        projectCode: projectCodeSchema,
-        page: z.number().optional().describe('Page number for pagination'),
-        limit: z.number().optional().default(20).describe('Number of items per page'),
-        sortField: z
-          .enum([
-            'id',
-            'seq',
-            'folder_id',
-            'author_id',
-            'pos',
-            'title',
-            'priority',
-            'created_at',
-            'updated_at',
-            'legacy_id',
-          ])
-          .optional()
-          .describe('Field to sort results by'),
-        sortOrder: z
-          .enum(['asc', 'desc'])
-          .optional()
-          .describe('Sort direction (ascending or descending)'),
-        search: z.string().optional().describe('Search term to filter test cases'),
-        include: z
-          .array(z.enum(['steps', 'tags', 'project', 'folder', 'path']))
-          .optional()
-          .describe('Related data to include in the response'),
-        folders: z.array(z.number()).optional().describe('Filter by folder IDs'),
-        tags: z.array(z.number()).optional().describe('Filter by tag IDs'),
-        priorities: z
-          .array(z.enum(['high', 'medium', 'low']))
-          .optional()
-          .describe('Filter by priority levels'),
-        draft: z.boolean().optional().describe('Filter draft vs published test cases'),
-      }),
+      projectCode: projectCodeSchema,
+      page: z.number().optional().describe('Page number for pagination'),
+      limit: z.number().optional().default(20).describe('Number of items per page'),
+      sortField: z
+        .enum([
+          'id',
+          'seq',
+          'folder_id',
+          'author_id',
+          'pos',
+          'title',
+          'priority',
+          'created_at',
+          'updated_at',
+          'legacy_id',
+        ])
+        .optional()
+        .describe('Field to sort results by'),
+      sortOrder: z
+        .enum(['asc', 'desc'])
+        .optional()
+        .describe('Sort direction (ascending or descending)'),
+      search: z.string().optional().describe('Search term to filter test cases'),
+      include: z
+        .array(z.enum(['steps', 'tags', 'project', 'folder', 'path']))
+        .optional()
+        .describe('Related data to include in the response'),
+      folders: z.array(z.number()).optional().describe('Filter by folder IDs'),
+      tags: z.array(z.number()).optional().describe('Filter by tag IDs'),
+      priorities: z
+        .array(z.enum(['high', 'medium', 'low']))
+        .optional()
+        .describe('Filter by priority levels'),
+      draft: z.boolean().optional().describe('Filter draft vs published test cases'),
     },
     async ({
       projectCode,
@@ -200,120 +194,118 @@ export const registerTools = (server: McpServer) => {
     }
   )
 
-  server.registerTool(
+  server.tool(
     'create_test_case',
+    'Create a new test case in QA Sphere. Supports both standalone and template test cases with various options like steps, tags, requirements, and parameter values for templates.',
     {
-      description:
-        'Create a new test case in QA Sphere. Supports both standalone and template test cases with various options like steps, tags, requirements, and parameter values for templates.',
-      inputSchema: z.object({
-        projectId: projectCodeSchema,
-        title: z
-          .string()
-          .min(1, 'Title must be at least 1 character')
-          .max(511, 'Title must be at most 511 characters')
-          .describe('Test case title'),
-        type: z
-          .enum(['standalone', 'template'])
-          .describe('Type of test case (standalone or template)'),
-        folderId: z
-          .number()
-          .int()
-          .positive('Folder ID must be a positive integer')
-          .describe(
-            'ID of the folder where the test case will be placed. Use bulk_upsert_folders tool to create new folders or get existing folders.'
-          ),
-        priority: z.enum(['high', 'medium', 'low']).describe('Test case priority'),
-        pos: z
-          .number()
-          .int()
-          .min(0, 'Position must be non-negative')
-          .optional()
-          .describe('Position within the folder (0-based index)'),
-        precondition: z
-          .union([
-            z.object({
-              id: z.number().int().min(1).describe('Reference to a shared precondition by ID'),
-            }),
-            z.object({
-              text: z.string().describe('Standalone precondition text (HTML format)'),
-            }),
-          ])
-          .optional()
-          .describe('Test case precondition (reference by id or provide text in HTML format)'),
-        steps: z
-          .array(
-            z.object({
-              sharedStepId: z
-                .number()
-                .int()
-                .positive()
-                .optional()
-                .describe('Unique identifier of the shared step'),
-              description: z.string().optional().describe('Details of steps (HTML format)'),
-              expected: z
-                .string()
-                .optional()
-                .describe('Expected result from the step (HTML format)'),
-            })
-          )
-          .optional()
-          .describe('List of test case steps'),
-        tags: z
-          .array(z.string().max(255, 'Tag title must be at most 255 characters'))
-          .optional()
-          .describe('List of tag titles'),
-        requirements: z
-          .array(
-            z.object({
-              text: z
-                .string()
-                .min(1, 'Requirement text must be at least 1 character')
-                .max(255, 'Requirement text must be at most 255 characters')
-                .describe('Title of the requirement'),
-              url: z
-                .string()
-                .min(1, 'Requirement URL must be at least 1 character')
-                .max(255, 'Requirement URL must be at most 255 characters')
-                .url('Requirement URL must be a valid URL')
-                .describe('URL of the requirement'),
-            })
-          )
-          .optional()
-          .describe('Test case requirements'),
-        links: z
-          .array(
-            z.object({
-              text: z
-                .string()
-                .min(1, 'Link text must be at least 1 character')
-                .max(255, 'Link text must be at most 255 characters')
-                .describe('Title of the link'),
-              url: z
-                .string()
-                .min(1, 'Link URL must be at least 1 character')
-                .max(255, 'Link URL must be at most 255 characters')
-                .url('Link URL must be a valid URL')
-                .describe('URL of the link'),
-            })
-          )
-          .optional()
-          .describe('Additional links relevant to the test case'),
-        parameterValues: z
-          .array(
-            z.object({
-              values: z
-                .record(z.string())
-                .describe('Values for the parameters in the template test case'),
-            })
-          )
-          .optional()
-          .describe('Values to substitute for parameters in template test cases'),
-        filledTCaseTitleSuffixParams: z
-          .array(z.string())
-          .optional()
-          .describe('Parameters to append to filled test case titles'),
-        isDraft: z.boolean().optional().default(false).describe('Whether to create as draft'),
-      }),
+      projectId: projectCodeSchema,
+      title: z
+        .string()
+        .min(1, 'Title must be at least 1 character')
+        .max(511, 'Title must be at most 511 characters')
+        .describe('Test case title'),
+      type: z
+        .enum(['standalone', 'template'])
+        .describe('Type of test case (standalone or template)'),
+      folderId: z
+        .number()
+        .int()
+        .positive('Folder ID must be a positive integer')
+        .describe(
+          'ID of the folder where the test case will be placed. Use bulk_upsert_folders tool to create new folders or get existing folders.'
+        ),
+      priority: z.enum(['high', 'medium', 'low']).describe('Test case priority'),
+      pos: z
+        .number()
+        .int()
+        .min(0, 'Position must be non-negative')
+        .optional()
+        .describe('Position within the folder (0-based index)'),
+      precondition: z
+        .union([
+          z.object({
+            sharedPreconditionId: z
+              .number()
+              .int()
+              .min(1)
+              .describe('Reference to a shared precondition by ID'),
+          }),
+          z.object({
+            text: z.string().describe('Standalone precondition text (HTML format)'),
+          }),
+        ])
+        .optional()
+        .describe('Test case precondition (reference by id or provide text in HTML format)'),
+      steps: z
+        .array(
+          z.object({
+            sharedStepId: z
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe('Unique identifier of the shared step'),
+            description: z.string().optional().describe('Details of steps (HTML format)'),
+            expected: z.string().optional().describe('Expected result from the step (HTML format)'),
+          })
+        )
+        .optional()
+        .describe('List of test case steps'),
+      tags: z
+        .array(z.string().max(255, 'Tag title must be at most 255 characters'))
+        .optional()
+        .describe('List of tag titles'),
+      requirements: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Requirement text must be at least 1 character')
+              .max(255, 'Requirement text must be at most 255 characters')
+              .describe('Title of the requirement'),
+            url: z
+              .string()
+              .min(1, 'Requirement URL must be at least 1 character')
+              .max(255, 'Requirement URL must be at most 255 characters')
+              .url('Requirement URL must be a valid URL')
+              .describe('URL of the requirement'),
+          })
+        )
+        .optional()
+        .describe('Test case requirements'),
+      links: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Link text must be at least 1 character')
+              .max(255, 'Link text must be at most 255 characters')
+              .describe('Title of the link'),
+            url: z
+              .string()
+              .min(1, 'Link URL must be at least 1 character')
+              .max(255, 'Link URL must be at most 255 characters')
+              .url('Link URL must be a valid URL')
+              .describe('URL of the link'),
+          })
+        )
+        .optional()
+        .describe('Additional links relevant to the test case'),
+      parameterValues: z
+        .array(
+          z.object({
+            values: z
+              .record(z.string())
+              .describe('Values for the parameters in the template test case'),
+          })
+        )
+        .optional()
+        .describe('Values to substitute for parameters in template test cases'),
+      filledTCaseTitleSuffixParams: z
+        .array(z.string())
+        .optional()
+        .describe('Parameters to append to filled test case titles'),
+      isDraft: z.boolean().optional().default(false).describe('Whether to create as draft'),
     },
     async ({ projectId, ...tcaseParams }) => {
       try {
@@ -373,113 +365,111 @@ export const registerTools = (server: McpServer) => {
     }
   )
 
-  server.registerTool(
+  server.tool(
     'update_test_case',
+    'Update an existing test case in QA Sphere. Only users with role User or higher are allowed to update test cases. Optional fields can be omitted to keep the current value.',
     {
-      description:
-        'Update an existing test case in QA Sphere. Only users with role User or higher are allowed to update test cases. Optional fields can be omitted to keep the current value.',
-      inputSchema: z.object({
-        projectId: projectCodeSchema,
-        tcaseOrLegacyId: z
-          .string()
-          .describe('Test case identifier (can be one of test case UUID, sequence or legacy ID)'),
-        title: z
-          .string()
-          .min(1, 'Title must be at least 1 character')
-          .max(511, 'Title must be at most 511 characters')
-          .optional()
-          .describe('Test case title'),
-        priority: z.enum(['high', 'medium', 'low']).optional().describe('Test case priority'),
-        precondition: z
-          .union([
-            z.object({
-              id: z.number().int().min(1).describe('Reference to a shared precondition by ID'),
-            }),
-            z.object({
-              text: z.string().describe('Standalone precondition text (HTML format)'),
-            }),
-          ])
-          .optional()
-          .describe('Test case precondition (reference by id or provide text in HTML format)'),
-        isDraft: z
-          .boolean()
-          .optional()
-          .describe(
-            'To publish a draft test case. A published test case cannot be converted to draft'
-          ),
-        steps: z
-          .array(
-            z.object({
-              sharedStepId: z
-                .number()
-                .int()
-                .positive()
-                .optional()
-                .describe('Unique identifier of the shared step'),
-              description: z.string().optional().describe('Details of steps (HTML format)'),
-              expected: z
-                .string()
-                .optional()
-                .describe('Expected result from the step (HTML format)'),
-            })
-          )
-          .optional()
-          .describe('List of test case steps'),
-        tags: z
-          .array(z.string().max(255, 'Tag title must be at most 255 characters'))
-          .optional()
-          .describe('List of tag titles'),
-        requirements: z
-          .array(
-            z.object({
-              text: z
-                .string()
-                .min(1, 'Requirement text must be at least 1 character')
-                .max(255, 'Requirement text must be at most 255 characters')
-                .describe('Title of the requirement'),
-              url: z
-                .string()
-                .min(1, 'Requirement URL must be at least 1 character')
-                .max(255, 'Requirement URL must be at most 255 characters')
-                .url('Requirement URL must be a valid URL')
-                .describe('URL of the requirement'),
-            })
-          )
-          .optional()
-          .describe('Test case requirements'),
-        links: z
-          .array(
-            z.object({
-              text: z
-                .string()
-                .min(1, 'Link text must be at least 1 character')
-                .max(255, 'Link text must be at most 255 characters')
-                .describe('Title of the link'),
-              url: z
-                .string()
-                .min(1, 'Link URL must be at least 1 character')
-                .max(255, 'Link URL must be at most 255 characters')
-                .url('Link URL must be a valid URL')
-                .describe('URL of the link'),
-            })
-          )
-          .optional()
-          .describe('Additional links relevant to the test case'),
-        parameterValues: z
-          .array(
-            z.object({
-              tcaseId: z
-                .string()
-                .optional()
-                .describe('Should be specified to update existing filled test case'),
-              values: z
-                .record(z.string())
-                .describe('Values for the parameters in the template test case'),
-            })
-          )
-          .optional()
-          .describe('Values to substitute for parameters in template test cases'),
-      }),
+      projectId: projectCodeSchema,
+      tcaseOrLegacyId: z
+        .string()
+        .describe('Test case identifier (can be one of test case UUID, sequence or legacy ID)'),
+      title: z
+        .string()
+        .min(1, 'Title must be at least 1 character')
+        .max(511, 'Title must be at most 511 characters')
+        .optional()
+        .describe('Test case title'),
+      priority: z.enum(['high', 'medium', 'low']).optional().describe('Test case priority'),
+      precondition: z
+        .union([
+          z.object({
+            sharedPreconditionId: z
+              .number()
+              .int()
+              .min(1)
+              .describe('Reference to a shared precondition by ID'),
+          }),
+          z.object({
+            text: z.string().describe('Standalone precondition text (HTML format)'),
+          }),
+        ])
+        .optional()
+        .describe('Test case precondition (reference by id or provide text in HTML format)'),
+      isDraft: z
+        .boolean()
+        .optional()
+        .describe(
+          'To publish a draft test case. A published test case cannot be converted to draft'
+        ),
+      steps: z
+        .array(
+          z.object({
+            sharedStepId: z
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe('Unique identifier of the shared step'),
+            description: z.string().optional().describe('Details of steps (HTML format)'),
+            expected: z.string().optional().describe('Expected result from the step (HTML format)'),
+          })
+        )
+        .optional()
+        .describe('List of test case steps'),
+      tags: z
+        .array(z.string().max(255, 'Tag title must be at most 255 characters'))
+        .optional()
+        .describe('List of tag titles'),
+      requirements: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Requirement text must be at least 1 character')
+              .max(255, 'Requirement text must be at most 255 characters')
+              .describe('Title of the requirement'),
+            url: z
+              .string()
+              .min(1, 'Requirement URL must be at least 1 character')
+              .max(255, 'Requirement URL must be at most 255 characters')
+              .url('Requirement URL must be a valid URL')
+              .describe('URL of the requirement'),
+          })
+        )
+        .optional()
+        .describe('Test case requirements'),
+      links: z
+        .array(
+          z.object({
+            text: z
+              .string()
+              .min(1, 'Link text must be at least 1 character')
+              .max(255, 'Link text must be at most 255 characters')
+              .describe('Title of the link'),
+            url: z
+              .string()
+              .min(1, 'Link URL must be at least 1 character')
+              .max(255, 'Link URL must be at most 255 characters')
+              .url('Link URL must be a valid URL')
+              .describe('URL of the link'),
+          })
+        )
+        .optional()
+        .describe('Additional links relevant to the test case'),
+      parameterValues: z
+        .array(
+          z.object({
+            tcaseId: z
+              .string()
+              .optional()
+              .describe('Should be specified to update existing filled test case'),
+            values: z
+              .record(z.string())
+              .describe('Values for the parameters in the template test case'),
+          })
+        )
+        .optional()
+        .describe('Values to substitute for parameters in template test cases'),
     },
     async ({ projectId, tcaseOrLegacyId, ...updateParams }) => {
       try {

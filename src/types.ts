@@ -120,7 +120,7 @@ export interface BulkUpsertFoldersResponse {
 
 // Request type for test case precondition - either reference by ID or provide text
 export type TestPreconditionRequest =
-  | { id: number } // Reference an existing shared precondition by ID
+  | { sharedPreconditionId: number } // Reference an existing shared precondition by ID
   | { text: string } // Provide standalone precondition text
 
 // Create Test Case API Types
