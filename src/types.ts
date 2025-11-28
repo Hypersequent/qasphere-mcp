@@ -14,6 +14,80 @@ export interface TestPrecondition {
   updatedAt: string // Precondition update time (ISO 8601 format)
 }
 
+export interface SharedPrecondition {
+  projectId: string // Unique identifier of the project
+  id: number // Unique identifier of the shared precondition
+  version: number // Version of the shared precondition
+  title: string // Title of the shared precondition
+  type: 'shared' // Type of the precondition (always "shared" for shared preconditions)
+  text: string // Text content of the precondition (HTML format)
+  isLatest: boolean // Whether this is the latest version of the precondition
+  createdAt: string // Precondition creation time (ISO 8601 format)
+  updatedAt: string // Precondition update time (ISO 8601 format)
+  deletedAt?: string | null // Date the precondition was deleted on (ISO 8601 format)
+  tcaseCount?: number // Number of test cases using this shared precondition (included only when requested)
+}
+
+export type SharedPreconditionListResponse = SharedPrecondition[] // List of shared preconditions
+
+export interface CreateSharedPreconditionRequest {
+  title: string // Title of the shared precondition (minimum 1 character)
+  text: string // Text content of the precondition in HTML format (minimum 1 character)
+}
+
+export interface UpdateSharedPreconditionRequest {
+  title?: string // Optional: Title of the shared precondition
+  text?: string // Optional: Text content of the precondition in HTML format
+}
+
+export interface SharedSubStep {
+  id: number // Unique identifier of the sub-step
+  type: 'shared_sub_step' // Type of the sub-step (always shared_sub_step)
+  version: number // Version of the shared step (same as parent)
+  isLatest: boolean // Whether this is the latest version
+  description: string // Description of the action (HTML)
+  expected: string // Expected result (HTML)
+  deletedAt?: string | null // Date the sub-step was deleted on (ISO 8601 format)
+}
+
+export interface SharedStep {
+  id: number // Unique identifier of the shared step
+  version: number // Version of the shared step
+  type: 'shared' // Type of the step (always shared)
+  title: string // Title of the shared step
+  isLatest: boolean // Whether this is the latest version
+  subSteps: SharedSubStep[] // List of sub-steps
+  deletedAt?: string | null // Date the shared step was deleted on (ISO 8601 format)
+  tcaseCount?: number // Number of test cases using this shared step (included only when requested)
+}
+
+export interface SharedStepListResponse {
+  sharedSteps: SharedStep[] // List of shared steps
+}
+
+export interface CreateSharedStepSubStep {
+  description?: string // Details of the sub-step (HTML)
+  expected?: string // Expected result from the sub-step (HTML)
+}
+
+export interface CreateSharedStepRequest {
+  title: string // Title of the shared step (1-255 characters)
+  subSteps: CreateSharedStepSubStep[] // List of sub-steps
+}
+
+export interface CreateSharedStepResponse {
+  id: number // Unique identifier of the created shared step
+}
+
+export interface UpdateSharedStepSubStep extends CreateSharedStepSubStep {
+  id?: number // Optional identifier of an existing sub-step to update
+}
+
+export interface UpdateSharedStepRequest {
+  title?: string // Optional: Title of the shared step (1-255 characters)
+  subSteps?: UpdateSharedStepSubStep[] // Optional: List of sub-steps to replace current sub-steps
+}
+
 export interface TestTag {
   id: number
   title: string
@@ -215,6 +289,6 @@ export interface UpdateTestCaseRequest {
   parameterValues?: UpdateTestCaseParameterValue[] // Optional: Values to substitute for parameters in template test cases
 }
 
-export interface UpdateTestCaseResponse {
+export interface MessageResponse {
   message: string // Success message
 }

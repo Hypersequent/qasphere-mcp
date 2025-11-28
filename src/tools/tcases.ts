@@ -7,7 +7,7 @@ import type {
   CreateTestCaseRequest,
   CreateTestCaseResponse,
   UpdateTestCaseRequest,
-  UpdateTestCaseResponse,
+  MessageResponse,
 } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 import { JSONStringify } from '../utils.js'
@@ -477,7 +477,7 @@ export const registerTools = (server: McpServer) => {
           ...updateParams,
         }
 
-        const response = await axios.patch<UpdateTestCaseResponse>(
+        const response = await axios.patch<MessageResponse>(
           `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectId}/tcase/${tcaseOrLegacyId}`,
           requestData,
           {
