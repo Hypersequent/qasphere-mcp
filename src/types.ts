@@ -30,16 +30,6 @@ export interface SharedPrecondition {
 
 export type SharedPreconditionListResponse = SharedPrecondition[] // List of shared preconditions
 
-export interface CreateSharedPreconditionRequest {
-  title: string // Title of the shared precondition (minimum 1 character)
-  text: string // Text content of the precondition in HTML format (minimum 1 character)
-}
-
-export interface UpdateSharedPreconditionRequest {
-  title?: string // Optional: Title of the shared precondition
-  text?: string // Optional: Text content of the precondition in HTML format
-}
-
 export interface SharedSubStep {
   id: number // Unique identifier of the sub-step
   type: 'shared_sub_step' // Type of the sub-step (always shared_sub_step)
@@ -63,29 +53,6 @@ export interface SharedStep {
 
 export interface SharedStepListResponse {
   sharedSteps: SharedStep[] // List of shared steps
-}
-
-export interface CreateSharedStepSubStep {
-  description?: string // Details of the sub-step (HTML)
-  expected?: string // Expected result from the sub-step (HTML)
-}
-
-export interface CreateSharedStepRequest {
-  title: string // Title of the shared step (1-255 characters)
-  subSteps: CreateSharedStepSubStep[] // List of sub-steps
-}
-
-export interface CreateSharedStepResponse {
-  id: number // Unique identifier of the created shared step
-}
-
-export interface UpdateSharedStepSubStep extends CreateSharedStepSubStep {
-  id?: number // Optional identifier of an existing sub-step to update
-}
-
-export interface UpdateSharedStepRequest {
-  title?: string // Optional: Title of the shared step (1-255 characters)
-  subSteps?: UpdateSharedStepSubStep[] // Optional: List of sub-steps to replace current sub-steps
 }
 
 export interface TestTag {
