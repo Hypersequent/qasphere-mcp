@@ -5,6 +5,7 @@ import { registerTools as registerTestFoldersTools } from './folders.js'
 import { registerTools as registerTestTagsTools } from './tags.js'
 import { registerTools as registerSharedPreconditionsTools } from './shared-preconditions.js'
 import { registerTools as registerSharedStepsTools } from './shared-steps.js'
+import { registerTools as registerCustomFieldsTools } from './customFields.js'
 
 export const registerTools = (server: McpServer) => {
   registerProjectsTools(server)
@@ -13,4 +14,5 @@ export const registerTools = (server: McpServer) => {
   registerTestTagsTools(server)
   registerSharedPreconditionsTools(server)
   registerSharedStepsTools(server)
+  registerCustomFieldsTools(server)
 }
