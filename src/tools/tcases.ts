@@ -7,7 +7,7 @@ import type {
   CreateTestCaseRequest,
   CreateTestCaseResponse,
   UpdateTestCaseRequest,
-  UpdateTestCaseResponse,
+  MessageResponse,
 } from '../types.js'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 import { JSONStringify } from '../utils.js'
@@ -45,7 +45,6 @@ export const registerTools = (server: McpServer) => {
             {
               type: 'text',
               text: JSONStringify(testCase, {
-                comment: 'precondition',
                 steps: { description: 'action', expected: 'expected_result' },
               }),
             },
@@ -172,7 +171,6 @@ export const registerTools = (server: McpServer) => {
               type: 'text',
               text: JSONStringify(testCasesList, {
                 data: {
-                  comment: 'precondition',
                   steps: {
                     description: 'action',
                     expected: 'expected_result',
@@ -223,7 +221,21 @@ export const registerTools = (server: McpServer) => {
         .min(0, 'Position must be non-negative')
         .optional()
         .describe('Position within the folder (0-based index)'),
-      comment: z.string().optional().describe('Test case precondition (HTML format)'),
+      precondition: z
+        .union([
+          z.object({
+            sharedPreconditionId: z
+              .number()
+              .int()
+              .min(1)
+              .describe('Reference to a shared precondition by ID'),
+          }),
+          z.object({
+            text: z.string().describe('Standalone precondition text (HTML format)'),
+          }),
+        ])
+        .optional()
+        .describe('Test case precondition (reference by id or provide text in HTML format)'),
       steps: z
         .array(
           z.object({
@@ -369,7 +381,21 @@ export const registerTools = (server: McpServer) => {
         .optional()
         .describe('Test case title'),
       priority: z.enum(['high', 'medium', 'low']).optional().describe('Test case priority'),
-      comment: z.string().optional().describe('Test case precondition (HTML format)'),
+      precondition: z
+        .union([
+          z.object({
+            sharedPreconditionId: z
+              .number()
+              .int()
+              .min(1)
+              .describe('Reference to a shared precondition by ID'),
+          }),
+          z.object({
+            text: z.string().describe('Standalone precondition text (HTML format)'),
+          }),
+        ])
+        .optional()
+        .describe('Test case precondition (reference by id or provide text in HTML format)'),
       isDraft: z
         .boolean()
         .optional()
@@ -453,7 +479,7 @@ export const registerTools = (server: McpServer) => {
           ...updateParams,
         }
 
-        const response = await axios.patch<UpdateTestCaseResponse>(
+        const response = await axios.patch<MessageResponse>(
           `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectId}/tcase/${tcaseOrLegacyId}`,
           requestData,
           {

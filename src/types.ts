@@ -3,6 +3,58 @@ export interface TestStep {
   expected: string
 }
 
+export interface TestPrecondition {
+  id: number // Unique identifier of the precondition
+  version: number // Version of the precondition
+  title: string // Title of the precondition
+  text: string // Precondition text content
+  type: 'shared' | 'standalone' // Type of precondition (shared across tests or standalone)
+  isLatest: boolean // Whether this is the latest version of the precondition
+  createdAt: string // Precondition creation time (ISO 8601 format)
+  updatedAt: string // Precondition update time (ISO 8601 format)
+}
+
+export interface SharedPrecondition {
+  projectId: string // Unique identifier of the project
+  id: number // Unique identifier of the shared precondition
+  version: number // Version of the shared precondition
+  title: string // Title of the shared precondition
+  type: 'shared' // Type of the precondition (always "shared" for shared preconditions)
+  text: string // Text content of the precondition (HTML format)
+  isLatest: boolean // Whether this is the latest version of the precondition
+  createdAt: string // Precondition creation time (ISO 8601 format)
+  updatedAt: string // Precondition update time (ISO 8601 format)
+  deletedAt?: string | null // Date the precondition was deleted on (ISO 8601 format)
+  tcaseCount?: number // Number of test cases using this shared precondition (included only when requested)
+}
+
+export type SharedPreconditionListResponse = SharedPrecondition[] // List of shared preconditions
+
+export interface SharedSubStep {
+  id: number // Unique identifier of the sub-step
+  type: 'shared_sub_step' // Type of the sub-step (always shared_sub_step)
+  version: number // Version of the shared step (same as parent)
+  isLatest: boolean // Whether this is the latest version
+  description: string // Description of the action (HTML)
+  expected: string // Expected result (HTML)
+  deletedAt?: string | null // Date the sub-step was deleted on (ISO 8601 format)
+}
+
+export interface SharedStep {
+  id: number // Unique identifier of the shared step
+  version: number // Version of the shared step
+  type: 'shared' // Type of the step (always shared)
+  title: string // Title of the shared step
+  isLatest: boolean // Whether this is the latest version
+  subSteps: SharedSubStep[] // List of sub-steps
+  deletedAt?: string | null // Date the shared step was deleted on (ISO 8601 format)
+  tcaseCount?: number // Number of test cases using this shared step (included only when requested)
+}
+
+export interface SharedStepListResponse {
+  sharedSteps: SharedStep[] // List of shared steps
+}
+
 export interface TestTag {
   id: number
   title: string
@@ -36,7 +88,11 @@ export interface TestCase {
   folderId: number // Identifier of the folder where the test case is placed
   pos: number // Ordered position (0 based) of the test case in its folder
   priority: 'high' | 'medium' | 'low' // Priority of the test case
-  comment: string // Test description/precondition
+  /**
+   * @deprecated Use `precondition` instead. This field is kept for backward compatibility.
+   */
+  comment: string // Test description/precondition (deprecated - use precondition instead)
+  precondition?: TestPrecondition // Test precondition and setup requirements
   steps: TestStep[] // List of test case steps
   tags: TestTag[] // List of test case tags
   files: TestFile[] // List of files attached to the test case
@@ -103,6 +159,11 @@ export interface BulkUpsertFoldersResponse {
   ids: number[][] // Each array represents the full folder path hierarchy as an array of folder IDs
 }
 
+// Request type for test case precondition - either reference by ID or provide text
+export type TestPreconditionRequest =
+  | { sharedPreconditionId: number } // Reference an existing shared precondition by ID
+  | { text: string } // Provide standalone precondition text
+
 // Create Test Case API Types
 export interface CreateTestCaseStep {
   sharedStepId?: number // For shared steps
@@ -135,7 +196,7 @@ export interface CreateTestCaseRequest {
   folderId: number // Required: ID of the folder where the test case will be placed
   priority: 'high' | 'medium' | 'low' // Required: Test case priority
   pos?: number // Optional: Position within the folder (0-based index)
-  comment?: string // Optional: Test case precondition (HTML)
+  precondition?: TestPreconditionRequest // Optional: Test case precondition
   steps?: CreateTestCaseStep[] // Optional: List of test case steps
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
   requirements?: CreateTestCaseRequirement[] // Optional: Test case requirements
@@ -176,7 +237,11 @@ export interface UpdateTestCaseParameterValue {
 export interface UpdateTestCaseRequest {
   title?: string // Optional: Test case title (1-511 characters)
   priority?: 'high' | 'medium' | 'low' // Optional: Test case priority
+  /**
+   * @deprecated Use `precondition` instead. This field is kept for backward compatibility.
+   */
   comment?: string // Optional: Test case precondition (HTML)
+  precondition?: TestPreconditionRequest // Optional: Test case precondition
   isDraft?: boolean // Optional: To publish a draft test case
   steps?: UpdateTestCaseStep[] // Optional: List of test case steps
   tags?: string[] // Optional: List of tag titles (max 255 characters each)
@@ -186,7 +251,7 @@ export interface UpdateTestCaseRequest {
   parameterValues?: UpdateTestCaseParameterValue[] // Optional: Values to substitute for parameters in template test cases
 }
 
-export interface UpdateTestCaseResponse {
+export interface MessageResponse {
   message: string // Success message
 }
 
