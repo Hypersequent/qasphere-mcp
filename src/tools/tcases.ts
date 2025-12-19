@@ -90,7 +90,7 @@ export const registerTools = (server: McpServer) => {
         .describe('Sort direction (ascending or descending)'),
       search: z.string().optional().describe('Search term to filter test cases'),
       include: z
-        .array(z.enum(['steps', 'tags', 'project', 'folder', 'path']))
+        .array(z.enum(['steps', 'tags', 'project', 'folder', 'path', 'requirements']))
         .optional()
         .describe('Related data to include in the response'),
       folders: z.array(z.number()).optional().describe('Filter by folder IDs'),
@@ -100,6 +100,12 @@ export const registerTools = (server: McpServer) => {
         .optional()
         .describe('Filter by priority levels'),
       draft: z.boolean().optional().describe('Filter draft vs published test cases'),
+      requirementIds: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Filter by requirement IDs (OR logic - returns test cases linked to any of the specified requirements). Use list_requirements tool to find requirement IDs if you only have the requirement title or URL.'
+        ),
     },
     async ({
       projectCode,
@@ -113,6 +119,7 @@ export const registerTools = (server: McpServer) => {
       tags,
       priorities,
       draft,
+      requirementIds,
     }) => {
       try {
         // Build query parameters
@@ -129,6 +136,7 @@ export const registerTools = (server: McpServer) => {
         if (folders) folders.forEach((item) => params.append('folders', item.toString()))
         if (tags) tags.forEach((item) => params.append('tags', item.toString()))
         if (priorities) priorities.forEach((item) => params.append('priorities', item))
+        if (requirementIds) requirementIds.forEach((item) => params.append('requirementIds', item))
 
         if (draft !== undefined) params.append('draft', draft.toString())
 
