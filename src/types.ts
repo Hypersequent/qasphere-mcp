@@ -280,3 +280,23 @@ export interface CustomField {
 export interface CustomFieldsResponse {
   customFields: CustomField[] // Array of custom fields
 }
+
+// Requirements API Types
+export interface RequirementIntegrationLink {
+  issueId: string // Jira issue ID (e.g., "PROJ-123")
+  issueTitle: string // Title of the Jira issue
+  issueUrl: string // Full URL to the Jira issue
+  remoteLinkId: number // Jira remote link ID
+}
+
+export interface Requirement {
+  id: string // Unique identifier of the requirement (HQID7 format)
+  text: string // Descriptive label for the requirement
+  url: string // URL to the external requirement document (empty string if not set)
+  integrationLink?: RequirementIntegrationLink // Jira integration link (only present if linked to Jira)
+  tcaseCount?: number // Number of test cases linked to this requirement (only included if requested)
+}
+
+export interface RequirementsListResponse {
+  requirements: Requirement[] // List of requirements
+}
