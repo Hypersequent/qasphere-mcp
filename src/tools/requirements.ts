@@ -1,9 +1,27 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
 import axios from 'axios'
-import { z } from 'zod'
+import { z, ZodError } from 'zod'
 import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
 import { projectCodeSchema } from '../schemas.js'
-import type { RequirementsListResponse } from '../types.js'
+
+const requirementIntegrationLinkSchema = z.object({
+  issueId: z.string(),
+  issueTitle: z.string(),
+  issueUrl: z.string(),
+  remoteLinkId: z.number(),
+})
+
+const requirementSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  url: z.string(),
+  integrationLink: requirementIntegrationLinkSchema.optional(),
+  tcaseCount: z.number().optional(),
+})
+
+const requirementsListResponseSchema = z.object({
+  requirements: z.array(requirementSchema),
+})
 
 export const registerTools = (server: McpServer) => {
   server.tool(
@@ -36,7 +54,7 @@ export const registerTools = (server: McpServer) => {
 
         const url = `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectCode}/requirement`
 
-        const response = await axios.get<RequirementsListResponse>(url, {
+        const response = await axios.get(url, {
           params,
           headers: {
             Authorization: `ApiKey ${QASPHERE_API_KEY}`,
@@ -44,18 +62,7 @@ export const registerTools = (server: McpServer) => {
           },
         })
 
-        const requirementsResponse = response.data
-
-        if (!requirementsResponse || !Array.isArray(requirementsResponse.requirements)) {
-          throw new Error('Invalid response: expected an object with a "requirements" array')
-        }
-
-        if (requirementsResponse.requirements.length > 0) {
-          const first = requirementsResponse.requirements[0]
-          if (!first.id || first.text === undefined) {
-            throw new Error('Invalid requirement data: missing required fields (id or text)')
-          }
-        }
+        const requirementsResponse = requirementsListResponseSchema.parse(response.data)
 
         return {
           content: [
@@ -66,6 +73,9 @@ export const registerTools = (server: McpServer) => {
           ],
         }
       } catch (error: unknown) {
+        if (error instanceof ZodError) {
+          throw new Error(`Invalid response data: ${error.errors.map((e) => e.message).join(', ')}`)
+        }
         if (axios.isAxiosError(error)) {
           const status = error.response?.status
           const message = error.response?.data?.message || error.message
