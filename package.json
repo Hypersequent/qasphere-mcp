@@ -23,7 +23,8 @@
     "format": "biome format --write .",
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "test": "vitest run",
-    "test:unit": "vitest run src/tests/unit",
+    "test:unit": "vitest run",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
     "prepare": "husky"
   },
   "dependencies": {
