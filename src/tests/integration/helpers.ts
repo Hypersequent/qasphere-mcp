@@ -178,9 +178,10 @@ export function getApiHeaders() {
 }
 
 // Create a test folder within a project
+// Returns array of folder IDs for the path hierarchy (e.g., [parentId, childId] for nested paths)
 export async function createTestFolder(projectCode: string, path: string[]) {
   const response = await axios.post(
-    `${getTenantUrl()}/api/public/v0/project/${projectCode}/folder/bulk-upsert`,
+    `${getTenantUrl()}/api/public/v0/project/${projectCode}/tcase/folder/bulk`,
     {
       folders: [{ path }],
     },
@@ -188,7 +189,7 @@ export async function createTestFolder(projectCode: string, path: string[]) {
       headers: getApiHeaders(),
     }
   )
-  return response.data.folders[0]
+  return response.data.ids[0]
 }
 
 // Sleep helper for rate limiting

@@ -36,19 +36,20 @@ describe('Custom Fields API Integration Tests', () => {
   describe('list_custom_fields', () => {
     it('should return field definitions', async () => {
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/custom-fields`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/custom-field`,
         {
           headers: getApiHeaders(),
         }
       )
 
       expect(response.status).toBe(200)
-      expect(Array.isArray(response.data)).toBe(true)
+      expect(response.data).toHaveProperty('customFields')
+      expect(Array.isArray(response.data.customFields)).toBe(true)
     })
 
     it('should return fields with correct types', async () => {
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/custom-fields`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/custom-field`,
         {
           headers: getApiHeaders(),
         }
@@ -57,11 +58,12 @@ describe('Custom Fields API Integration Tests', () => {
       expect(response.status).toBe(200)
 
       // If there are custom fields, verify they have the expected structure
-      if (response.data.length > 0) {
-        const field = response.data[0]
+      const customFields = response.data.customFields
+      if (customFields.length > 0) {
+        const field = customFields[0]
         expect(field).toHaveProperty('id')
         expect(field).toHaveProperty('systemName')
-        expect(field).toHaveProperty('title')
+        expect(field).toHaveProperty('name')
         expect(field).toHaveProperty('type')
         expect(['text', 'dropdown']).toContain(field.type)
       }

@@ -101,10 +101,13 @@ describe('Test Case API Integration Tests', () => {
         }
       )
 
+      // Build URL params manually to ensure correct array serialization
+      const params = new URLSearchParams()
+      params.append('priorities', 'high')
+
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase?${params.toString()}`,
         {
-          params: { priorities: ['high'] },
           headers: getApiHeaders(),
         }
       )
@@ -116,10 +119,14 @@ describe('Test Case API Integration Tests', () => {
     })
 
     it('should include steps and tags when requested', async () => {
+      // Build URL params manually to ensure correct array serialization
+      const params = new URLSearchParams()
+      params.append('include', 'steps')
+      params.append('include', 'tags')
+
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase?${params.toString()}`,
         {
-          params: { include: ['steps', 'tags'] },
           headers: getApiHeaders(),
         }
       )
@@ -148,8 +155,8 @@ describe('Test Case API Integration Tests', () => {
         }
       )
 
-      expect(response.status).toBe(200)
-      expect(response.data).toHaveProperty('tcaseId')
+      expect(response.status).toBe(201)
+      expect(response.data).toHaveProperty('id')
       expect(response.data).toHaveProperty('seq')
       createdTestCaseSeq = response.data.seq
     })
@@ -178,8 +185,8 @@ describe('Test Case API Integration Tests', () => {
         }
       )
 
-      expect(response.status).toBe(200)
-      expect(response.data).toHaveProperty('tcaseId')
+      expect(response.status).toBe(201)
+      expect(response.data).toHaveProperty('id')
 
       // Verify steps were saved
       const getResponse = await axios.get(
@@ -209,7 +216,7 @@ describe('Test Case API Integration Tests', () => {
         }
       )
 
-      expect(response.status).toBe(200)
+      expect(response.status).toBe(201)
 
       // Verify tags were created/linked
       const getResponse = await axios.get(

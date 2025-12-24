@@ -63,18 +63,21 @@ describe('Requirements API Integration Tests', () => {
   describe('list_requirements', () => {
     it('should return requirement list', async () => {
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/requirements`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/requirement`,
         {
           headers: getApiHeaders(),
         }
       )
 
       expect(response.status).toBe(200)
-      expect(Array.isArray(response.data)).toBe(true)
-      expect(response.data.length).toBeGreaterThan(0)
+      expect(response.data).toHaveProperty('requirements')
+      expect(Array.isArray(response.data.requirements)).toBe(true)
+      expect(response.data.requirements.length).toBeGreaterThan(0)
 
       // Find our test requirement
-      const testReq = response.data.find((req: any) => req.text === '[MCP-TEST] Requirement')
+      const testReq = response.data.requirements.find(
+        (req: any) => req.text === '[MCP-TEST] Requirement'
+      )
       expect(testReq).toBeDefined()
       expect(testReq).toHaveProperty('id')
       expect(testReq).toHaveProperty('url')
@@ -83,7 +86,7 @@ describe('Requirements API Integration Tests', () => {
 
     it('should include test case count when requested', async () => {
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/requirements`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/requirement`,
         {
           params: { include: 'tcaseCount' },
           headers: getApiHeaders(),
@@ -91,8 +94,8 @@ describe('Requirements API Integration Tests', () => {
       )
 
       expect(response.status).toBe(200)
-      if (response.data.length > 0) {
-        const firstReq = response.data[0]
+      if (response.data.requirements.length > 0) {
+        const firstReq = response.data.requirements[0]
         expect(firstReq).toHaveProperty('tcaseCount')
         expect(typeof firstReq.tcaseCount).toBe('number')
       }

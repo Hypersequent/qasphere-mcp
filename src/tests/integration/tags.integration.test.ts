@@ -42,14 +42,15 @@ describe('Tags API Integration Tests', () => {
   describe('list_test_cases_tags', () => {
     it('should return tag list', async () => {
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/tags`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tag`,
         {
           headers: getApiHeaders(),
         }
       )
 
       expect(response.status).toBe(200)
-      expect(Array.isArray(response.data)).toBe(true)
+      expect(response.data).toHaveProperty('tags')
+      expect(Array.isArray(response.data.tags)).toBe(true)
     })
 
     it('should reflect created tags after test case creation', async () => {
@@ -72,14 +73,14 @@ describe('Tags API Integration Tests', () => {
 
       // List tags
       const response = await axios.get(
-        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/tags`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tag`,
         {
           headers: getApiHeaders(),
         }
       )
 
       expect(response.status).toBe(200)
-      const createdTag = response.data.find((tag: any) => tag.title === tagName)
+      const createdTag = response.data.tags.find((tag: any) => tag.title === tagName)
       expect(createdTag).toBeDefined()
       expect(createdTag).toHaveProperty('id')
       expect(createdTag).toHaveProperty('title')
