@@ -36,8 +36,9 @@ export async function login(): Promise<string> {
         },
       }
     )
-    sharedSessionToken = response.data.token
-    return sharedSessionToken
+    const token: string = response.data.token
+    sharedSessionToken = token
+    return token
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(`Failed to login: ${error.response?.data?.message || error.message}`)
