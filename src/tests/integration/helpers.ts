@@ -36,35 +36,69 @@ export function validateEnvVars() {
 // Shared session token for all tests
 let sharedSessionToken: string | null = null
 
-// Login to get session token (cached)
+// Retry configuration for rate-limited requests
+const RETRY_CONFIG = {
+  maxRetries: 5,
+  initialDelayMs: 2000,
+  maxDelayMs: 30000,
+  backoffMultiplier: 2,
+}
+
+// Check if error is a rate limit error
+function isRateLimitError(error: unknown): boolean {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status
+    const message = error.response?.data?.message?.toLowerCase() || ''
+    return status === 429 || message.includes('too many requests') || message.includes('rate limit')
+  }
+  return false
+}
+
+// Login to get session token (cached) with retry logic for rate limits
 export async function login(): Promise<string> {
   if (sharedSessionToken) {
     return sharedSessionToken
   }
 
-  try {
-    const response = await axios.post(
-      `${getTenantUrl()}/api/auth/login`,
-      {
-        tenantId: getTenantId(),
-        email: getAuthEmail(),
-        password: getAuthPassword(),
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
+  let lastError: Error | null = null
+  let delay = RETRY_CONFIG.initialDelayMs
+
+  for (let attempt = 1; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      const response = await axios.post(
+        `${getTenantUrl()}/api/auth/login`,
+        {
+          tenantId: getTenantId(),
+          email: getAuthEmail(),
+          password: getAuthPassword(),
         },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const token: string = response.data.token
+      sharedSessionToken = token
+      return token
+    } catch (error) {
+      if (isRateLimitError(error)) {
+        lastError = new Error(`Rate limited on login attempt ${attempt}/${RETRY_CONFIG.maxRetries}`)
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          console.log(`Rate limited, waiting ${delay}ms before retry ${attempt + 1}...`)
+          await sleep(delay)
+          delay = Math.min(delay * RETRY_CONFIG.backoffMultiplier, RETRY_CONFIG.maxDelayMs)
+          continue
+        }
       }
-    )
-    const token: string = response.data.token
-    sharedSessionToken = token
-    return token
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Failed to login: ${error.response?.data?.message || error.message}`)
+      if (axios.isAxiosError(error)) {
+        throw new Error(`Failed to login: ${error.response?.data?.message || error.message}`)
+      }
+      throw error
     }
-    throw error
   }
+
+  throw lastError || new Error('Login failed after all retries')
 }
 
 // Get the current session token (must call login() first)
