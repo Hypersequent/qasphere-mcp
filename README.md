@@ -63,6 +63,39 @@ For any MCP client, use the following configuration format:
 
 Replace the placeholder values with your actual QA Sphere URL and API key.
 
+## Development
+
+### Running Tests
+
+```bash
+# Unit tests
+npm test
+
+# Integration tests (requires environment variables)
+npm run test:integration
+```
+
+### E2E Testing with Claude
+
+The project includes an E2E testing workflow that uses Claude Code to exercise all MCP tools against a real QA Sphere instance.
+
+#### Required GitHub Secrets
+
+To run E2E tests, configure these secrets in your repository:
+
+| Secret | Description |
+|--------|-------------|
+| `CLAUDE_CODE_OAUTH_TOKEN` | OAuth token for Claude Code Action |
+| `QASPHERE_TENANT_URL` | Your QA Sphere tenant URL (e.g., `https://example.eu1.qasphere.com`) |
+| `QASPHERE_API_KEY` | API key with access to test projects |
+
+#### Running E2E Tests
+
+1. Go to **Actions** → **E2E Tests with Claude**
+2. Click **Run workflow**
+3. Select test scope (`all`, `projects`, `tcases`, etc.)
+4. Review Claude's test report in the workflow output
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
