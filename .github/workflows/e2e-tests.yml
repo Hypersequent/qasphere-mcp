@@ -1,0 +1,139 @@
+name: E2E Tests with Claude
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      test_scope:
+        description: 'Scope of tests to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - projects
+          - tcases
+          - folders
+          - tags
+          - requirements
+          - custom-fields
+          - shared-steps
+          - shared-preconditions
+
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    env:
+      TEST_SCOPE: ${{ github.event.inputs.test_scope || 'all' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build MCP server
+        run: npm run build
+
+      - name: Create MCP Config
+        env:
+          QASPHERE_TENANT_URL: ${{ secrets.QASPHERE_TENANT_URL }}
+          QASPHERE_API_KEY: ${{ secrets.QASPHERE_API_KEY }}
+        run: |
+          cat > /tmp/mcp-config.json << EOF
+          {
+            "mcpServers": {
+              "qasphere": {
+                "command": "node",
+                "args": ["${{ github.workspace }}/dist/index.js"],
+                "env": {
+                  "QASPHERE_TENANT_URL": "${QASPHERE_TENANT_URL}",
+                  "QASPHERE_API_KEY": "${QASPHERE_API_KEY}"
+                }
+              }
+            }
+          }
+          EOF
+
+      - name: Run Claude E2E Tests
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: --mcp-config /tmp/mcp-config.json
+          prompt: |
+            # QA Sphere MCP E2E Test Run
+
+            You are running E2E tests for the QA Sphere MCP server. The MCP server is already built and configured.
+            You have access to the `qasphere` MCP server with tools like `mcp__qasphere__list_projects`, `mcp__qasphere__get_project`, etc.
+
+            ## Test Scope: ${{ env.TEST_SCOPE }}
+
+            ## Instructions
+
+            1. Use the QA Sphere MCP tools to verify they work correctly
+            2. For each tool, make a real API call and verify the response
+            3. Report results in a structured format
+
+            ## Test Cases to Execute
+
+            ### Projects Tests
+            - [ ] `list_projects` - List all projects and verify response structure
+            - [ ] `get_project` - Get a specific project (use project code from list)
+
+            ### Test Cases Tests (if scope includes tcases or all)
+            - [ ] `list_test_cases` - List test cases from a project
+            - [ ] `get_test_case` - Get a specific test case by marker
+            - [ ] `create_test_case` - Create a new test case (use E2E folder)
+            - [ ] `update_test_case` - Update the created test case
+
+            ### Folders Tests (if scope includes folders or all)
+            - [ ] `list_folders` - List folders in a project
+            - [ ] `upsert_folders` - Create/update a test folder named "MCP-E2E-Tests"
+
+            ### Tags Tests (if scope includes tags or all)
+            - [ ] `list_test_cases_tags` - List all tags in a project
+
+            ### Requirements Tests (if scope includes requirements or all)
+            - [ ] `list_requirements` - List requirements in a project
+
+            ### Custom Fields Tests (if scope includes custom-fields or all)
+            - [ ] `list_custom_fields` - List custom fields in a project
+
+            ### Shared Steps Tests (if scope includes shared-steps or all)
+            - [ ] `list_shared_steps` - List shared steps in a project
+
+            ### Shared Preconditions Tests (if scope includes shared-preconditions or all)
+            - [ ] `list_shared_preconditions` - List shared preconditions in a project
+
+            ## Expected Output Format
+
+            For each test, report:
+            ```
+            PASS: tool_name - Brief description of what was verified
+            FAIL: tool_name - Error message or unexpected behavior
+            SKIP: tool_name - Reason for skipping
+            ```
+
+            ## Important Notes
+            - First call list_projects to discover available projects
+            - Use the first available project for testing
+            - Create test artifacts in a folder named "MCP-E2E-Tests"
+            - Clean up any test cases you create (but keep the folder for future runs)
+            - If a test fails, continue with remaining tests
+            - Provide a final summary with pass/fail counts
+
+            Please execute the tests now and provide a summary report.

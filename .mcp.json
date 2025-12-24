@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "qasphere": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "QASPHERE_TENANT_URL": "${QASPHERE_TENANT_URL}",
+        "QASPHERE_API_KEY": "${QASPHERE_API_KEY}"
+      }
+    }
+  }
+}
