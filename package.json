@@ -24,6 +24,7 @@
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "test": "vitest run",
     "test:unit": "vitest run src/tests/unit",
+    "test:integration": "vitest run src/tests/integration",
     "prepare": "husky"
   },
   "dependencies": {
