@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import axios from 'axios'
 import {
-  TENANT_URL,
+  getTenantUrl,
   getApiHeaders,
   login,
   createTestProject,
@@ -33,14 +33,16 @@ describe('Tags API Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Clean up the test project
-    await deleteTestProject(sessionToken, testProjectId)
+    // Clean up the test project (only if it was created)
+    if (sessionToken && testProjectId) {
+      await deleteTestProject(sessionToken, testProjectId)
+    }
   })
 
   describe('list_test_cases_tags', () => {
     it('should return tag list', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/tags`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/tags`,
         {
           headers: getApiHeaders(),
         }
@@ -55,7 +57,7 @@ describe('Tags API Integration Tests', () => {
 
       // Create a test case with a tag
       await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           title: `[MCP-TEST] Tag Test ${Date.now()}`,
           type: 'standalone',
@@ -70,7 +72,7 @@ describe('Tags API Integration Tests', () => {
 
       // List tags
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/tags`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/tags`,
         {
           headers: getApiHeaders(),
         }

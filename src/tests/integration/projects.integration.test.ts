@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import axios from 'axios'
 import {
-  TENANT_URL,
+  getTenantUrl,
   getApiHeaders,
   login,
   createTestProject,
@@ -27,13 +27,15 @@ describe('Project API Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Clean up the test project
-    await deleteTestProject(sessionToken, testProjectId)
+    // Clean up the test project (only if it was created)
+    if (sessionToken && testProjectId) {
+      await deleteTestProject(sessionToken, testProjectId)
+    }
   })
 
   describe('list_projects', () => {
     it('should return array with at least 1 project', async () => {
-      const response = await axios.get(`${TENANT_URL}/api/public/v0/project`, {
+      const response = await axios.get(`${getTenantUrl()}/api/public/v0/project`, {
         headers: getApiHeaders(),
       })
 
@@ -51,9 +53,12 @@ describe('Project API Integration Tests', () => {
 
   describe('get_project', () => {
     it('should return project with matching code', async () => {
-      const response = await axios.get(`${TENANT_URL}/api/public/v0/project/${testProjectCode}`, {
-        headers: getApiHeaders(),
-      })
+      const response = await axios.get(
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}`,
+        {
+          headers: getApiHeaders(),
+        }
+      )
 
       expect(response.status).toBe(200)
       expect(response.data).toHaveProperty('id')
@@ -65,7 +70,7 @@ describe('Project API Integration Tests', () => {
 
     it('should throw 404 error for non-existent project', async () => {
       await expect(
-        axios.get(`${TENANT_URL}/api/public/v0/project/XXXNONEXISTENT`, {
+        axios.get(`${getTenantUrl()}/api/public/v0/project/XXXNONEXISTENT`, {
           headers: getApiHeaders(),
         })
       ).rejects.toMatchObject({

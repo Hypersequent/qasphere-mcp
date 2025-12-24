@@ -12,6 +12,7 @@ jobs:
     env:
       QASPHERE_TENANT_URL: https://e2eqas.eu1.qasphere.com
       QASPHERE_API_KEY: ${{ secrets.QASPHERE_API_KEY }}
+      QASPHERE_AUTH_EMAIL: ${{ secrets.QASPHERE_AUTH_EMAIL }}
       QASPHERE_AUTH_PASSWORD: ${{ secrets.QASPHERE_AUTH_PASSWORD }}
 
     steps:

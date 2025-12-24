@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import axios from 'axios'
 import {
-  TENANT_URL,
+  getTenantUrl,
   getApiHeaders,
   login,
   createTestProject,
@@ -34,14 +34,16 @@ describe('Test Case API Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Clean up the test project
-    await deleteTestProject(sessionToken, testProjectId)
+    // Clean up the test project (only if it was created)
+    if (sessionToken && testProjectId) {
+      await deleteTestProject(sessionToken, testProjectId)
+    }
   })
 
   describe('list_test_cases', () => {
     it('should return paginated list', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           headers: getApiHeaders(),
         }
@@ -59,7 +61,7 @@ describe('Test Case API Integration Tests', () => {
       // Create a test case with unique title
       const uniqueTitle = `[MCP-TEST] Unique ${Date.now()}`
       await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           title: uniqueTitle,
           type: 'standalone',
@@ -72,7 +74,7 @@ describe('Test Case API Integration Tests', () => {
       )
 
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           params: { search: uniqueTitle },
           headers: getApiHeaders(),
@@ -87,7 +89,7 @@ describe('Test Case API Integration Tests', () => {
     it('should filter by priority', async () => {
       // Create a high priority test case
       await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           title: `[MCP-TEST] High Priority ${Date.now()}`,
           type: 'standalone',
@@ -100,7 +102,7 @@ describe('Test Case API Integration Tests', () => {
       )
 
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           params: { priorities: ['high'] },
           headers: getApiHeaders(),
@@ -115,7 +117,7 @@ describe('Test Case API Integration Tests', () => {
 
     it('should include steps and tags when requested', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           params: { include: ['steps', 'tags'] },
           headers: getApiHeaders(),
@@ -134,7 +136,7 @@ describe('Test Case API Integration Tests', () => {
   describe('create_test_case', () => {
     it('should create standalone test case', async () => {
       const response = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           title: `[MCP-TEST] Standalone ${Date.now()}`,
           type: 'standalone',
@@ -154,7 +156,7 @@ describe('Test Case API Integration Tests', () => {
 
     it('should create test case with steps', async () => {
       const response = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           title: `[MCP-TEST] With Steps ${Date.now()}`,
           type: 'standalone',
@@ -181,7 +183,7 @@ describe('Test Case API Integration Tests', () => {
 
       // Verify steps were saved
       const getResponse = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${response.data.seq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${response.data.seq}`,
         {
           headers: getApiHeaders(),
         }
@@ -194,7 +196,7 @@ describe('Test Case API Integration Tests', () => {
     it('should create test case with tags', async () => {
       const tagName = `mcp-test-${Date.now()}`
       const response = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           title: `[MCP-TEST] With Tags ${Date.now()}`,
           type: 'standalone',
@@ -211,7 +213,7 @@ describe('Test Case API Integration Tests', () => {
 
       // Verify tags were created/linked
       const getResponse = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${response.data.seq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${response.data.seq}`,
         {
           params: { include: ['tags'] },
           headers: getApiHeaders(),
@@ -227,7 +229,7 @@ describe('Test Case API Integration Tests', () => {
     it('should return full test case by marker', async () => {
       const marker = `${testProjectCode}-${createdTestCaseSeq}`
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
         {
           headers: getApiHeaders(),
         }
@@ -242,7 +244,7 @@ describe('Test Case API Integration Tests', () => {
 
     it('should throw 404 for non-existent test case', async () => {
       await expect(
-        axios.get(`${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/999999`, {
+        axios.get(`${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/999999`, {
           headers: getApiHeaders(),
         })
       ).rejects.toMatchObject({
@@ -257,7 +259,7 @@ describe('Test Case API Integration Tests', () => {
     it('should update test case title', async () => {
       const newTitle = `[MCP-TEST] Updated Title ${Date.now()}`
       const response = await axios.patch(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
         {
           title: newTitle,
         },
@@ -270,7 +272,7 @@ describe('Test Case API Integration Tests', () => {
 
       // Verify title was updated
       const getResponse = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
         {
           headers: getApiHeaders(),
         }
@@ -281,7 +283,7 @@ describe('Test Case API Integration Tests', () => {
 
     it('should update test case priority', async () => {
       const response = await axios.patch(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
         {
           priority: 'high',
         },
@@ -294,7 +296,7 @@ describe('Test Case API Integration Tests', () => {
 
       // Verify priority was updated
       const getResponse = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${createdTestCaseSeq}`,
         {
           headers: getApiHeaders(),
         }

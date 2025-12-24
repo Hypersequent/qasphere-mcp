@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import axios from 'axios'
 import {
-  TENANT_URL,
+  getTenantUrl,
   getApiHeaders,
   login,
   createTestProject,
@@ -34,7 +34,7 @@ describe('Requirements API Integration Tests', () => {
 
     // Create a test case with a requirement
     await axios.post(
-      `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+      `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
       {
         title: `[MCP-TEST] Requirement Test ${Date.now()}`,
         type: 'standalone',
@@ -54,14 +54,16 @@ describe('Requirements API Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Clean up the test project
-    await deleteTestProject(sessionToken, testProjectId)
+    // Clean up the test project (only if it was created)
+    if (sessionToken && testProjectId) {
+      await deleteTestProject(sessionToken, testProjectId)
+    }
   })
 
   describe('list_requirements', () => {
     it('should return requirement list', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/requirements`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/requirements`,
         {
           headers: getApiHeaders(),
         }
@@ -81,7 +83,7 @@ describe('Requirements API Integration Tests', () => {
 
     it('should include test case count when requested', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/requirements`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/requirements`,
         {
           params: { include: 'tcaseCount' },
           headers: getApiHeaders(),
@@ -100,7 +102,7 @@ describe('Requirements API Integration Tests', () => {
   describe('filter test cases by requirement', () => {
     it('should return linked test cases', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase`,
         {
           params: { requirementIds: [requirementId] },
           headers: getApiHeaders(),
@@ -113,7 +115,7 @@ describe('Requirements API Integration Tests', () => {
       // Verify all returned test cases have the requirement
       for (const testCase of response.data.data) {
         const tcResponse = await axios.get(
-          `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/${testCase.seq}`,
+          `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/${testCase.seq}`,
           {
             params: { include: ['requirements'] },
             headers: getApiHeaders(),

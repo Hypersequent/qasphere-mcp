@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import axios from 'axios'
 import {
-  TENANT_URL,
+  getTenantUrl,
   getApiHeaders,
   login,
   createTestProject,
@@ -27,14 +27,16 @@ describe('Custom Fields API Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Clean up the test project
-    await deleteTestProject(sessionToken, testProjectId)
+    // Clean up the test project (only if it was created)
+    if (sessionToken && testProjectId) {
+      await deleteTestProject(sessionToken, testProjectId)
+    }
   })
 
   describe('list_custom_fields', () => {
     it('should return field definitions', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/custom-fields`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/custom-fields`,
         {
           headers: getApiHeaders(),
         }
@@ -46,7 +48,7 @@ describe('Custom Fields API Integration Tests', () => {
 
     it('should return fields with correct types', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/custom-fields`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/custom-fields`,
         {
           headers: getApiHeaders(),
         }

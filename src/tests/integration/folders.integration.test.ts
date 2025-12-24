@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import axios from 'axios'
 import {
-  TENANT_URL,
+  getTenantUrl,
   getApiHeaders,
   login,
   createTestProject,
@@ -27,14 +27,16 @@ describe('Folder API Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Clean up the test project
-    await deleteTestProject(sessionToken, testProjectId)
+    // Clean up the test project (only if it was created)
+    if (sessionToken && testProjectId) {
+      await deleteTestProject(sessionToken, testProjectId)
+    }
   })
 
   describe('list_folders', () => {
     it('should return folder list with pagination', async () => {
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folders`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folders`,
         {
           headers: getApiHeaders(),
         }
@@ -51,7 +53,7 @@ describe('Folder API Integration Tests', () => {
     it('should respect pagination parameters', async () => {
       // First create some folders
       await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
         {
           folders: [
             { path: ['[MCP-TEST] Folder 1'] },
@@ -68,7 +70,7 @@ describe('Folder API Integration Tests', () => {
       )
 
       const response = await axios.get(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folders`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folders`,
         {
           params: { page: 1, limit: 5 },
           headers: getApiHeaders(),
@@ -85,7 +87,7 @@ describe('Folder API Integration Tests', () => {
   describe('upsert_folders', () => {
     it('should create single folder', async () => {
       const response = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
         {
           folders: [{ path: ['[MCP-TEST] Single Folder'] }],
         },
@@ -104,7 +106,7 @@ describe('Folder API Integration Tests', () => {
 
     it('should create nested folders', async () => {
       const response = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
         {
           folders: [{ path: ['[MCP-TEST] A', '[MCP-TEST] B', '[MCP-TEST] C'] }],
         },
@@ -130,7 +132,7 @@ describe('Folder API Integration Tests', () => {
 
       // Create folder
       const createResponse = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
         {
           folders: [{ path: folderPath, comment: 'Initial comment' }],
         },
@@ -143,7 +145,7 @@ describe('Folder API Integration Tests', () => {
 
       // Update folder comment
       const updateResponse = await axios.post(
-        `${TENANT_URL}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
+        `${getTenantUrl()}/api/public/v0/project/${testProjectCode}/tcase/folder/bulk`,
         {
           folders: [{ path: folderPath, comment: 'Updated comment' }],
         },

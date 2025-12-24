@@ -1,16 +1,36 @@
 import axios from 'axios'
 
 // Environment configuration
-export const TENANT_URL = process.env.QASPHERE_TENANT_URL || 'https://e2eqas.eu1.qasphere.com'
-export const API_KEY = process.env.QASPHERE_API_KEY || ''
+// Using getters to allow dotenv to load before values are read
+export function getTenantUrl() {
+  return process.env.QASPHERE_TENANT_URL || 'https://e2eqas.eu1.qasphere.com'
+}
 
-// Auth credentials for internal API
-const TENANT_ID = 'eu1vweq68d'
-const AUTH_EMAIL = 'satvik+e2eqasphere@hypersequent.com'
-const AUTH_PASSWORD = process.env.QASPHERE_AUTH_PASSWORD || 'drk-brz7ABF9ken8hcf'
+export function getApiKey() {
+  return process.env.QASPHERE_API_KEY || ''
+}
 
-if (!API_KEY) {
-  throw new Error('QASPHERE_API_KEY environment variable is required for integration tests')
+function getTenantId() {
+  return process.env.QASPHERE_TENANT_ID || 'eu1vweq68d'
+}
+
+function getAuthEmail() {
+  return process.env.QASPHERE_AUTH_EMAIL || ''
+}
+
+function getAuthPassword() {
+  return process.env.QASPHERE_AUTH_PASSWORD || ''
+}
+
+// Validate required environment variables
+export function validateEnvVars() {
+  const missing: string[] = []
+  if (!getApiKey()) missing.push('QASPHERE_API_KEY')
+  if (!getAuthEmail()) missing.push('QASPHERE_AUTH_EMAIL')
+  if (!getAuthPassword()) missing.push('QASPHERE_AUTH_PASSWORD')
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
+  }
 }
 
 // Shared session token for all tests
@@ -24,11 +44,11 @@ export async function login(): Promise<string> {
 
   try {
     const response = await axios.post(
-      `${TENANT_URL}/api/auth/login`,
+      `${getTenantUrl()}/api/auth/login`,
       {
-        tenantId: TENANT_ID,
-        email: AUTH_EMAIL,
-        password: AUTH_PASSWORD,
+        tenantId: getTenantId(),
+        email: getAuthEmail(),
+        password: getAuthPassword(),
       },
       {
         headers: {
@@ -69,7 +89,7 @@ export function generateProjectCode(): string {
 export async function createTestProject(sessionToken: string, code: string, title: string) {
   try {
     const response = await axios.post(
-      `${TENANT_URL}/api/project`,
+      `${getTenantUrl()}/api/project`,
       {
         code,
         title,
@@ -96,7 +116,7 @@ export async function createTestProject(sessionToken: string, code: string, titl
 // Delete a test project using internal API
 export async function deleteTestProject(sessionToken: string, projectId: string) {
   try {
-    await axios.delete(`${TENANT_URL}/api/project/${projectId}`, {
+    await axios.delete(`${getTenantUrl()}/api/project/${projectId}`, {
       headers: {
         Authorization: `Bearer ${sessionToken}`,
         'Content-Type': 'application/json',
@@ -118,7 +138,7 @@ export async function deleteTestProject(sessionToken: string, projectId: string)
 // Get API headers
 export function getApiHeaders() {
   return {
-    Authorization: `ApiKey ${API_KEY}`,
+    Authorization: `ApiKey ${getApiKey()}`,
     'Content-Type': 'application/json',
   }
 }
@@ -126,7 +146,7 @@ export function getApiHeaders() {
 // Create a test folder within a project
 export async function createTestFolder(projectCode: string, path: string[]) {
   const response = await axios.post(
-    `${TENANT_URL}/api/public/v0/project/${projectCode}/folder/bulk-upsert`,
+    `${getTenantUrl()}/api/public/v0/project/${projectCode}/folder/bulk-upsert`,
     {
       folders: [{ path }],
     },
