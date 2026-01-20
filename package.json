@@ -18,10 +18,12 @@
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "test": "vitest run",
+    "test:unit": "vitest run src/tests/unit",
     "prepare": "husky"
   },
   "dependencies": {
