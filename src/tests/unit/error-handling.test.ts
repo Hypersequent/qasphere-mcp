@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { MockedAxios } from '../setup.js'
 import axios from 'axios'
+import { mockToolCall } from '../utils.js'
 
 vi.mock('axios')
 vi.mock('../../config.js', () => ({
@@ -25,12 +26,7 @@ describe('Error Handling Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find((call: any) => call[0] === 'get_project')?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_project')
 
       await expect(handler({ projectCode: 'BDI' })).rejects.toThrow('Failed to fetch project')
     })
@@ -44,14 +40,7 @@ describe('Error Handling Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_projects'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_projects')
 
       await expect(handler()).rejects.toThrow('Failed to fetch projects')
     })
@@ -70,14 +59,7 @@ describe('Error Handling Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'create_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'create_test_case')
 
       await expect(
         handler({
@@ -100,14 +82,11 @@ describe('Error Handling Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'get_project')
 
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find((call: any) => call[0] === 'get_project')?.[3]
-
-      await expect(handler({ projectCode: 'BDI' })).rejects.toThrow()
+      await expect(handler({ projectCode: 'BDI' })).rejects.toThrow(
+        'Unexpected token < in JSON at position 0'
+      )
     })
   })
 
@@ -124,14 +103,7 @@ describe('Error Handling Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../tools/customFields.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_custom_fields'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_custom_fields')
 
       await expect(handler({ projectCode: 'BDI' })).rejects.toThrow('Invalid or missing API key')
     })
@@ -148,14 +120,7 @@ describe('Error Handling Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'create_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'create_test_case')
 
       await expect(
         handler({
