@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { MockedAxios } from '../../setup.js'
 import axios from 'axios'
 import { mockProject, mockProjects, mockProjectsEmpty } from '../../fixtures/projects.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -21,20 +22,9 @@ describe('Project Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockProject })
 
       const { registerTools } = await import('../../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn((name, desc, schema, handler) => {
-          if (name === 'get_project') {
-            return handler({ projectCode: 'TST' })
-          }
-        }),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'get_project')
 
-      const result = await registerTools(mockServer)
-      const getProjectHandler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_project'
-      )?.[3]
-
-      const response = await getProjectHandler({ projectCode: 'TST' })
+      const response = await handler({ projectCode: 'TST' })
 
       expect(response).toEqual({
         content: [{ type: 'text', text: JSON.stringify(mockProject) }],
@@ -58,16 +48,9 @@ describe('Project Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'get_project')
 
-      registerTools(mockServer)
-      const getProjectHandler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_project'
-      )?.[3]
-
-      await expect(getProjectHandler({ projectCode: 'NOTFOUND' })).rejects.toThrow(
+      await expect(handler({ projectCode: 'NOTFOUND' })).rejects.toThrow(
         "Project with code 'NOTFOUND' not found."
       )
     })
@@ -76,16 +59,9 @@ describe('Project Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: { id: 'test' } })
 
       const { registerTools } = await import('../../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'get_project')
 
-      registerTools(mockServer)
-      const getProjectHandler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_project'
-      )?.[3]
-
-      await expect(getProjectHandler({ projectCode: 'TST' })).rejects.toThrow(
+      await expect(handler({ projectCode: 'TST' })).rejects.toThrow(
         'Invalid project data: missing required fields (id or title)'
       )
     })
@@ -96,16 +72,9 @@ describe('Project Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockProjects })
 
       const { registerTools } = await import('../../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'list_projects')
 
-      registerTools(mockServer)
-      const listProjectsHandler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_projects'
-      )?.[3]
-
-      const response = await listProjectsHandler()
+      const response = await handler()
 
       expect(response).toEqual({
         content: [{ type: 'text', text: JSON.stringify(mockProjects) }],
@@ -125,16 +94,9 @@ describe('Project Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockProjectsEmpty })
 
       const { registerTools } = await import('../../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'list_projects')
 
-      registerTools(mockServer)
-      const listProjectsHandler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_projects'
-      )?.[3]
-
-      const response = await listProjectsHandler()
+      const response = await handler()
 
       expect(response).toEqual({
         content: [{ type: 'text', text: JSON.stringify(mockProjectsEmpty) }],
@@ -145,18 +107,9 @@ describe('Project Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: { projects: 'not-an-array' } })
 
       const { registerTools } = await import('../../../tools/projects.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
+      const { handler } = mockToolCall(registerTools, 'list_projects')
 
-      registerTools(mockServer)
-      const listProjectsHandler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_projects'
-      )?.[3]
-
-      await expect(listProjectsHandler()).rejects.toThrow(
-        'Invalid response: expected an array of projects'
-      )
+      await expect(handler()).rejects.toThrow('Invalid response: expected an array of projects')
     })
   })
 })

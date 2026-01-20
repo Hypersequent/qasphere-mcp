@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { MockedAxios } from '../../setup.js'
 import axios from 'axios'
 import { mockRequirements, mockRequirementsWithCount } from '../../fixtures/requirements.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -21,14 +22,7 @@ describe('Requirements Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockRequirements })
 
       const { registerTools } = await import('../../../tools/requirements.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_requirements'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_requirements')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -43,14 +37,7 @@ describe('Requirements Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockRequirementsWithCount })
 
       const { registerTools } = await import('../../../tools/requirements.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_requirements'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_requirements')
 
       const response = await handler({ projectCode: 'BDI', include: 'tcaseCount' })
 
@@ -63,14 +50,7 @@ describe('Requirements Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockRequirements })
 
       const { registerTools } = await import('../../../tools/requirements.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_requirements'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_requirements')
 
       await handler({ projectCode: 'BDI', sortField: 'text', sortOrder: 'asc' })
 
@@ -84,14 +64,7 @@ describe('Requirements Tools Tests', () => {
 
     it('should throw error when sortOrder is specified without sortField', async () => {
       const { registerTools } = await import('../../../tools/requirements.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_requirements'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_requirements')
 
       await expect(handler({ projectCode: 'BDI', sortOrder: 'asc' })).rejects.toThrow(
         'sortOrder can only be specified when sortField is provided.'
@@ -107,14 +80,7 @@ describe('Requirements Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/requirements.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_requirements'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_requirements')
 
       await expect(handler({ projectCode: 'NOTFOUND' })).rejects.toThrow(
         "Project with code 'NOTFOUND' not found."

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { MockedAxios } from '../../setup.js'
 import axios from 'axios'
 import { mockTags, mockTagsEmpty } from '../../fixtures/tags.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -21,14 +22,7 @@ describe('Tags Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: { tags: mockTags.data } })
 
       const { registerTools } = await import('../../../tools/tags.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_test_cases_tags'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_test_cases_tags')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -43,14 +37,7 @@ describe('Tags Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: { tags: [] } })
 
       const { registerTools } = await import('../../../tools/tags.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_test_cases_tags'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_test_cases_tags')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -67,14 +54,7 @@ describe('Tags Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/tags.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_test_cases_tags'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_test_cases_tags')
 
       await expect(handler({ projectCode: 'NOTFOUND' })).rejects.toThrow(
         "Project with identifier 'NOTFOUND' not found."

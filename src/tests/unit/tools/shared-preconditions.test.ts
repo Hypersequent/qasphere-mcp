@@ -6,6 +6,7 @@ import {
   mockSharedPrecondition,
   mockSharedPreconditionsWithCount,
 } from '../../fixtures/sharedPreconditions.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -25,14 +26,7 @@ describe('Shared Preconditions Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockSharedPreconditions })
 
       const { registerTools } = await import('../../../tools/shared-preconditions.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_shared_preconditions'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_shared_preconditions')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -47,14 +41,7 @@ describe('Shared Preconditions Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockSharedPreconditionsWithCount })
 
       const { registerTools } = await import('../../../tools/shared-preconditions.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_shared_preconditions'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_shared_preconditions')
 
       const response = await handler({ projectCode: 'BDI', include: 'tcaseCount' })
 
@@ -65,14 +52,7 @@ describe('Shared Preconditions Tools Tests', () => {
 
     it('should throw error when sortOrder is specified without sortField', async () => {
       const { registerTools } = await import('../../../tools/shared-preconditions.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_shared_preconditions'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_shared_preconditions')
 
       await expect(handler({ projectCode: 'BDI', sortOrder: 'asc' })).rejects.toThrow(
         'sortOrder can only be specified when sortField is provided.'
@@ -85,14 +65,7 @@ describe('Shared Preconditions Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockSharedPrecondition })
 
       const { registerTools } = await import('../../../tools/shared-preconditions.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_shared_precondition'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_shared_precondition')
 
       const response = await handler({ projectCode: 'BDI', sharedPreconditionId: 1 })
 
@@ -112,14 +85,7 @@ describe('Shared Preconditions Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/shared-preconditions.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_shared_precondition'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_shared_precondition')
 
       await expect(handler({ projectCode: 'BDI', sharedPreconditionId: 999 })).rejects.toThrow(
         'Project or shared precondition not found'

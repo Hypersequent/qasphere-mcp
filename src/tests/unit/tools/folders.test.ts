@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { MockedAxios } from '../../setup.js'
 import axios from 'axios'
 import { mockFolders, mockUpsertFoldersResponse } from '../../fixtures/folders.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -21,14 +22,7 @@ describe('Folder Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockFolders })
 
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_folders')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -42,14 +36,7 @@ describe('Folder Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockFolders })
 
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_folders')
 
       await handler({
         projectCode: 'BDI',
@@ -76,14 +63,7 @@ describe('Folder Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_folders')
 
       await expect(handler({ projectCode: 'NOTFOUND' })).rejects.toThrow(
         "Project with code 'NOTFOUND' not found."
@@ -96,14 +76,7 @@ describe('Folder Tools Tests', () => {
       mockedAxios.post.mockResolvedValue({ data: { ids: mockUpsertFoldersResponse } })
 
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'upsert_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'upsert_folders')
 
       const response = await handler({
         projectCode: 'BDI',
@@ -117,14 +90,7 @@ describe('Folder Tools Tests', () => {
 
     it('should throw validation error when folder name contains slash', async () => {
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'upsert_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'upsert_folders')
 
       await expect(
         handler({
@@ -136,14 +102,7 @@ describe('Folder Tools Tests', () => {
 
     it('should throw validation error when folder name is empty', async () => {
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'upsert_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'upsert_folders')
 
       await expect(
         handler({
@@ -162,14 +121,7 @@ describe('Folder Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/folders.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'upsert_folders'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'upsert_folders')
 
       await expect(
         handler({

@@ -6,6 +6,7 @@ import {
   mockSharedStep,
   mockSharedStepsWithCount,
 } from '../../fixtures/sharedSteps.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -25,14 +26,7 @@ describe('Shared Steps Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockSharedSteps })
 
       const { registerTools } = await import('../../../tools/shared-steps.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_shared_steps'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_shared_steps')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -47,14 +41,7 @@ describe('Shared Steps Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockSharedStepsWithCount })
 
       const { registerTools } = await import('../../../tools/shared-steps.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_shared_steps'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_shared_steps')
 
       const response = await handler({ projectCode: 'BDI', include: 'tcaseCount' })
 
@@ -65,14 +52,7 @@ describe('Shared Steps Tools Tests', () => {
 
     it('should throw error when sortOrder is specified without sortField', async () => {
       const { registerTools } = await import('../../../tools/shared-steps.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_shared_steps'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_shared_steps')
 
       await expect(handler({ projectCode: 'BDI', sortOrder: 'asc' })).rejects.toThrow(
         'sortOrder can only be specified when sortField is provided.'
@@ -85,14 +65,7 @@ describe('Shared Steps Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockSharedStep })
 
       const { registerTools } = await import('../../../tools/shared-steps.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_shared_step'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_shared_step')
 
       const response = await handler({ projectCode: 'BDI', sharedStepId: 1 })
 
@@ -112,14 +85,7 @@ describe('Shared Steps Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/shared-steps.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_shared_step'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_shared_step')
 
       await expect(handler({ projectCode: 'BDI', sharedStepId: 999 })).rejects.toThrow(
         'Project or shared step not found'

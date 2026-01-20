@@ -7,6 +7,7 @@ import {
   mockTestCasesEmpty,
   mockCreateTestCaseResponse,
 } from '../../fixtures/testcases.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -26,14 +27,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockTestCase })
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_test_case')
 
       const response = await handler({ marker: 'BDI-123' })
 
@@ -61,14 +55,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'get_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'get_test_case')
 
       await expect(handler({ marker: 'BDI-999' })).rejects.toThrow('Failed to fetch test case')
     })
@@ -79,14 +66,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockTestCasesList })
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_test_cases'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_test_cases')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -101,14 +81,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockTestCasesList })
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_test_cases'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_test_cases')
 
       await handler({
         projectCode: 'BDI',
@@ -131,14 +104,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: mockTestCasesEmpty })
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_test_cases'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_test_cases')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -153,14 +119,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.post.mockResolvedValue({ data: mockCreateTestCaseResponse })
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'create_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'create_test_case')
 
       const response = await handler({
         projectId: 'BDI',
@@ -184,14 +143,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'create_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'create_test_case')
 
       await expect(
         handler({
@@ -213,14 +165,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'create_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'create_test_case')
 
       await expect(
         handler({
@@ -242,14 +187,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'create_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'create_test_case')
 
       await expect(
         handler({
@@ -268,14 +206,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.patch.mockResolvedValue({ data: { message: 'Test case updated successfully' } })
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'update_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'update_test_case')
 
       const response = await handler({
         projectId: 'BDI',
@@ -297,14 +228,7 @@ describe('Test Case Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/tcases.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'update_test_case'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'update_test_case')
 
       await expect(
         handler({

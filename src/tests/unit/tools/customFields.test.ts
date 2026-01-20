@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { MockedAxios } from '../../setup.js'
 import axios from 'axios'
 import { mockCustomFields } from '../../fixtures/customFields.js'
+import { mockToolCall } from '../../utils.js'
 
 vi.mock('axios')
 vi.mock('../../../config.js', () => ({
@@ -21,14 +22,7 @@ describe('Custom Fields Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: { customFields: mockCustomFields.data } })
 
       const { registerTools } = await import('../../../tools/customFields.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_custom_fields'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_custom_fields')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -42,14 +36,7 @@ describe('Custom Fields Tools Tests', () => {
       mockedAxios.get.mockResolvedValue({ data: { customFields: mockCustomFields.data } })
 
       const { registerTools } = await import('../../../tools/customFields.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_custom_fields'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_custom_fields')
 
       const response = await handler({ projectCode: 'BDI' })
 
@@ -69,14 +56,7 @@ describe('Custom Fields Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/customFields.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_custom_fields'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_custom_fields')
 
       await expect(handler({ projectCode: 'NOTFOUND' })).rejects.toThrow(
         "Project with code 'NOTFOUND' not found."
@@ -92,14 +72,7 @@ describe('Custom Fields Tools Tests', () => {
       mockedAxios.isAxiosError.mockReturnValue(true)
 
       const { registerTools } = await import('../../../tools/customFields.js')
-      const mockServer = {
-        tool: vi.fn(),
-      } as any
-
-      registerTools(mockServer)
-      const handler = mockServer.tool.mock.calls.find(
-        (call: any) => call[0] === 'list_custom_fields'
-      )?.[3]
+      const { handler } = mockToolCall(registerTools, 'list_custom_fields')
 
       await expect(handler({ projectCode: 'BDI' })).rejects.toThrow('Invalid or missing API key')
     })
