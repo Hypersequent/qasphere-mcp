@@ -9,6 +9,11 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      QASPHERE_TENANT_URL: https://e2eqas.eu1.qasphere.com
+      QASPHERE_API_KEY: ${{ secrets.QASPHERE_API_KEY }}
+      QASPHERE_AUTH_EMAIL: ${{ secrets.QASPHERE_AUTH_EMAIL }}
+      QASPHERE_AUTH_PASSWORD: ${{ secrets.QASPHERE_AUTH_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -35,5 +40,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run tests
-        run: npm test
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+        run: npm run test:integration
