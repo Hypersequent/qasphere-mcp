@@ -63,6 +63,10 @@ For any MCP client, use the following configuration format:
 
 Replace the placeholder values with your actual QA Sphere URL and API key.
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/hypersequent-qasphere-mcp).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
