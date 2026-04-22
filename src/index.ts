@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { LoggingTransport } from './LoggingTransport.js'
 import { registerTools } from './tools/index.js'
 
