@@ -6,7 +6,7 @@ This integration enables Large Language Models (LLMs) to interact directly with 
 
 ## Prerequisites
 
-- Node.js (recent LTS versions)
+- Node.js (>=22)
 - QA Sphere account with API access
 - API key from QA Sphere (Settings ⚙️ → API Keys → Add API Key)
 - Your company's QA Sphere URL (e.g., `example.eu2.qasphere.com`)

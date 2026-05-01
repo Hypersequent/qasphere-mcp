@@ -13,6 +13,16 @@ export class ApiError extends Error {
   }
 }
 
+export class ResponseValidationError extends Error {
+  body: unknown
+
+  constructor(message: string, body?: unknown) {
+    super(message)
+    this.name = 'ResponseValidationError'
+    this.body = body
+  }
+}
+
 type QueryValue = string | number | boolean | string[] | number[] | undefined
 
 export interface ApiQueryOptions<T extends z.ZodTypeAny> {
@@ -45,7 +55,9 @@ export async function apiQuery<T extends z.ZodTypeAny>(
   const method = opts.method ?? 'GET'
   const headers: Record<string, string> = {
     Authorization: `ApiKey ${QASPHERE_API_KEY}`,
-    'Content-Type': 'application/json',
+  }
+  if (opts.body !== undefined) {
+    headers['Content-Type'] = 'application/json'
   }
 
   const res = await fetch(url, {
@@ -72,7 +84,7 @@ export async function apiQuery<T extends z.ZodTypeAny>(
   const raw = await res.json()
   const parsed = opts.schema.safeParse(raw)
   if (!parsed.success) {
-    throw new ApiError(`Response validation failed: ${parsed.error.message}`, res.status, raw)
+    throw new ResponseValidationError(`Response validation failed: ${parsed.error.message}`, raw)
   }
   return parsed.data
 }

@@ -30,10 +30,14 @@ export const registerTools = (server: McpServer) => {
         }
       } catch (error: unknown) {
         if (error instanceof ApiError) {
-          if (error.status === 404) {
-            throw new Error(`Project with code '${projectCode}' not found.`)
-          }
-          throw new Error(`Failed to fetch test case folders: ${error.message}`)
+          const message = error.message
+          if (error.status === 400) throw new Error(`Invalid request data: ${message}`)
+          if (error.status === 401) throw new Error('Invalid or missing API key')
+          if (error.status === 403) throw new Error('Insufficient permissions or suspended tenant')
+          if (error.status === 404) throw new Error(`Project with code '${projectCode}' not found.`)
+          if (error.status === 500)
+            throw new Error('Internal server error while fetching test case folders')
+          throw new Error(`Failed to fetch test case folders: ${message}`)
         }
         throw error
       }
