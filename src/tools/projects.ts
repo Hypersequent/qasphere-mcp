@@ -1,84 +1,69 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
-import axios from 'axios'
-import type { Project } from '../types.js'
-import { QASPHERE_API_KEY, QASPHERE_TENANT_URL } from '../config.js'
-import { projectCodeSchema } from '../schemas.js'
+import { ApiError, apiQuery } from '../api.js'
+import { QASPHERE_TENANT_URL } from '../config.js'
+import {
+  getProjectInputSchema,
+  getProjectOutputSchema,
+  listProjectsInputSchema,
+  listProjectsOutputSchema,
+} from '../schemas.js'
 
 export const registerTools = (server: McpServer) => {
-  server.tool(
+  server.registerTool(
     'get_project',
-    `Get a project information from QA Sphere using a project code (e.g., BDI). You can extract PROJECT_CODE from URLs ${QASPHERE_TENANT_URL}/project/%PROJECT_CODE%/...`,
     {
-      projectCode: projectCodeSchema,
+      title: 'Get Project',
+      description: `Get a project information from QA Sphere using a project code (e.g., BDI). You can extract PROJECT_CODE from URLs ${QASPHERE_TENANT_URL}/project/%PROJECT_CODE%/...`,
+      inputSchema: getProjectInputSchema.shape,
+      outputSchema: getProjectOutputSchema.shape,
     },
-    async ({ projectCode }: { projectCode: string }) => {
+    async ({ projectCode }) => {
       try {
-        const response = await axios.get<Project>(
-          `${QASPHERE_TENANT_URL}/api/public/v0/project/${projectCode}`,
-          {
-            headers: {
-              Authorization: `ApiKey ${QASPHERE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-
-        const projectData = response.data
-        if (!projectData.id || !projectData.title) {
-          throw new Error('Invalid project data: missing required fields (id or title)')
-        }
-
+        const project = await apiQuery(`/api/public/v0/project/${projectCode}`, {
+          schema: getProjectOutputSchema,
+        })
         return {
-          content: [{ type: 'text', text: JSON.stringify(projectData) }],
+          content: [{ type: 'text', text: JSON.stringify(project) }],
+          structuredContent: project,
         }
       } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          if (error.response?.status === 404) {
-            throw new Error(`Project with code '${projectCode}' not found.`)
-          }
-          throw new Error(
-            `Failed to fetch project: ${error.response?.data?.message || error.message}`
-          )
+        if (error instanceof ApiError) {
+          const message = error.message
+          if (error.status === 401) throw new Error('Invalid or missing API key')
+          if (error.status === 403) throw new Error('Insufficient permissions or suspended tenant')
+          if (error.status === 404) throw new Error(`Project with code '${projectCode}' not found.`)
+          if (error.status === 500) throw new Error('Internal server error while fetching project')
+          throw new Error(`Failed to fetch project: ${message}`)
         }
         throw error
       }
     }
   )
 
-  server.tool(
+  server.registerTool(
     'list_projects',
-    'Get a list of all projects from current QA Sphere TMS account (qasphere.com)',
-    {},
+    {
+      title: 'List Projects',
+      description: 'Get a list of all projects from current QA Sphere TMS account (qasphere.com)',
+      inputSchema: listProjectsInputSchema.shape,
+      outputSchema: listProjectsOutputSchema.shape,
+    },
     async () => {
       try {
-        const response = await axios.get(`${QASPHERE_TENANT_URL}/api/public/v0/project`, {
-          headers: {
-            Authorization: `ApiKey ${QASPHERE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
+        const projects = await apiQuery('/api/public/v0/project', {
+          schema: listProjectsOutputSchema,
         })
-
-        const projectsData = response.data
-        if (!Array.isArray(projectsData.projects)) {
-          throw new Error('Invalid response: expected an array of projects')
-        }
-
-        // if array is non-empty check if object has id and title fields
-        if (projectsData.projects.length > 0) {
-          const firstProject = projectsData.projects[0]
-          if (!firstProject.id || !firstProject.title) {
-            throw new Error('Invalid project data: missing required fields (id or title)')
-          }
-        }
-
         return {
-          content: [{ type: 'text', text: JSON.stringify(projectsData) }],
+          content: [{ type: 'text', text: JSON.stringify(projects) }],
+          structuredContent: projects,
         }
       } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          throw new Error(
-            `Failed to fetch projects: ${error.response?.data?.message || error.message}`
-          )
+        if (error instanceof ApiError) {
+          const message = error.message
+          if (error.status === 401) throw new Error('Invalid or missing API key')
+          if (error.status === 403) throw new Error('Insufficient permissions or suspended tenant')
+          if (error.status === 500) throw new Error('Internal server error while fetching projects')
+          throw new Error(`Failed to fetch projects: ${message}`)
         }
         throw error
       }
