@@ -54,7 +54,7 @@ export async function apiQuery<T extends z.ZodTypeAny>(
   const url = `${QASPHERE_TENANT_URL}${path}${buildQueryString(opts.query)}`
   const method = opts.method ?? 'GET'
   const headers: Record<string, string> = {
-    Authorization: `ApiKey ${QASPHERE_API_KEY}`,
+    Authorization: `Bearer ${QASPHERE_API_KEY}`,
   }
   if (opts.body !== undefined) {
     headers['Content-Type'] = 'application/json'

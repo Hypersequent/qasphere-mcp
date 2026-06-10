@@ -260,8 +260,9 @@ describe('test cases', () => {
         projectCode,
       })
       expect(typeof result.total).toBe('number')
-      expect(typeof result.page).toBe('number')
-      expect(typeof result.limit).toBe('number')
+      // The input defaults (offset 0, limit 20) are applied and echoed back.
+      expect(result.offset).toBe(0)
+      expect(result.limit).toBe(20)
     })
 
     it('respects limit=2 and limit=3 (backend honors pagination)', async () => {
@@ -283,30 +284,44 @@ describe('test cases', () => {
       expect(r3.data?.length).toBe(3)
     })
 
-    it('returns non-overlapping items on page 2', async () => {
-      const page1 = await callTool<ListTestCasesOutput>(client, 'list_test_cases', {
+    it('returns non-overlapping items with offset pagination', async () => {
+      const first = await callTool<ListTestCasesOutput>(client, 'list_test_cases', {
         projectCode,
         folders: [folderId],
         limit: 2,
-        page: 1,
+        offset: 0,
         sortField: 'seq',
         sortOrder: 'asc',
       })
-      const page2 = await callTool<ListTestCasesOutput>(client, 'list_test_cases', {
+      const second = await callTool<ListTestCasesOutput>(client, 'list_test_cases', {
         projectCode,
         folders: [folderId],
         limit: 2,
-        page: 2,
+        offset: 2,
         sortField: 'seq',
         sortOrder: 'asc',
       })
-      expect(page1.data?.length).toBe(2)
-      expect(page2.data?.length).toBeGreaterThan(0)
-      expect(page2.page).toBe(2)
-      const page1Ids = new Set(page1.data?.map((tc) => tc.id))
-      for (const tc of page2.data ?? []) {
-        expect(page1Ids.has(tc.id)).toBe(false)
+      expect(first.data?.length).toBe(2)
+      expect(first.offset).toBe(0)
+      expect(first.limit).toBe(2)
+      expect(second.data?.length).toBeGreaterThan(0)
+      expect(second.offset).toBe(2)
+      expect(second.limit).toBe(2)
+      const firstIds = new Set(first.data?.map((tc) => tc.id))
+      for (const tc of second.data ?? []) {
+        expect(firstIds.has(tc.id)).toBe(false)
       }
+    })
+
+    it('returns only the total when limit=0', async () => {
+      const result = await callTool<ListTestCasesOutput>(client, 'list_test_cases', {
+        projectCode,
+        folders: [folderId],
+        limit: 0,
+      })
+      expect(result.limit).toBe(0)
+      expect(result.total).toBeGreaterThanOrEqual(5)
+      expect(result.data ?? []).toHaveLength(0)
     })
 
     it('honors sortOrder asc vs desc on seq', async () => {
