@@ -349,10 +349,10 @@ export const listTestCasesInputSchema = z.object({
     .number()
     .int()
     .min(0)
-    .max(1000)
+    .max(5000)
     .default(20)
     .describe(
-      'Maximum number of test cases to return (0-1000, defaults to 20). Use 0 to fetch only the total count'
+      'Maximum number of test cases to return (0-5000, defaults to 20). Use 0 to fetch only the total count'
     ),
   sortField: z
     .enum([
@@ -616,10 +616,10 @@ export const listFoldersInputSchema = z.object({
     .number()
     .int()
     .min(0)
-    .max(1000)
+    .max(5000)
     .default(20)
     .describe(
-      'Maximum number of folders to return (0-1000, defaults to 20). Use 0 to fetch only the total count'
+      'Maximum number of folders to return (0-5000, defaults to 20). Use 0 to fetch only the total count'
     ),
   sortField: z
     .enum(['id', 'project_id', 'title', 'pos', 'parent_id', 'created_at', 'updated_at'])
