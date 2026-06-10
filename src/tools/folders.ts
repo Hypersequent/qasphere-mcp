@@ -18,11 +18,11 @@ export const registerTools = (server: McpServer) => {
       inputSchema: listFoldersInputSchema.shape,
       outputSchema: listFoldersOutputSchema.shape,
     },
-    async ({ projectCode, page, limit, sortField, sortOrder }) => {
+    async ({ projectCode, offset, limit, sortField, sortOrder }) => {
       try {
         const result = await apiQuery(`/api/public/v0/project/${projectCode}/tcase/folders`, {
           schema: listFoldersOutputSchema,
-          query: { page, limit, sortField, sortOrder },
+          query: { offset, limit, sortField, sortOrder },
         })
         return {
           content: [{ type: 'text', text: JSON.stringify(result) }],

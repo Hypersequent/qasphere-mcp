@@ -59,7 +59,7 @@ export const registerTools = (server: McpServer) => {
     },
     async ({
       projectCode,
-      page,
+      offset,
       limit,
       sortField,
       sortOrder,
@@ -76,7 +76,7 @@ export const registerTools = (server: McpServer) => {
     }) => {
       try {
         const query: Record<string, string | number | boolean | string[] | number[] | undefined> = {
-          page,
+          offset,
           limit,
           sortField,
           sortOrder,
