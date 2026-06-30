@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 
-dotenv.config()
+dotenv.config({ quiet: true })
 
 // Validate required environment variables
 const requiredEnvVars = ['QASPHERE_TENANT_URL', 'QASPHERE_API_KEY']
