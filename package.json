@@ -29,9 +29,10 @@
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "dev": "tsx src/index.ts",
-    "check": "biome check src",
-    "check:fix": "biome check --write src",
+    "check": "biome check src tests",
+    "check:fix": "biome check --write src tests",
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts",
+    "test:e2e": "vitest run -c vitest.e2e.config.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -45,7 +46,8 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
   },
   "lint-staged": {
     "*.{ts,js,json}": "biome check --write --no-errors-on-unmatched"
