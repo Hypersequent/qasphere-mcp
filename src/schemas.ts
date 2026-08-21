@@ -339,8 +339,21 @@ export type GetTestCaseOutput = z.infer<typeof getTestCaseOutputSchema>
 
 export const listTestCasesInputSchema = z.object({
   projectCode: projectCodeSchema,
-  page: z.number().optional().describe('Page number for pagination'),
-  limit: z.number().optional().default(20).describe('Number of items per page'),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe('Number of test cases to skip before returning results (defaults to 0)'),
+  limit: z
+    .number()
+    .int()
+    .min(0)
+    .max(5000)
+    .default(20)
+    .describe(
+      'Maximum number of test cases to return (0-5000, defaults to 20). Use 0 to fetch only the total count'
+    ),
   sortField: z
     .enum([
       'id',
@@ -404,8 +417,8 @@ export type ListTestCasesInput = z.infer<typeof listTestCasesInputSchema>
 
 export const listTestCasesOutputSchema = z.object({
   total: z.number().describe('Total number of filtered test cases'),
-  page: z.number().describe('Current page number'),
-  limit: z.number().describe('Number of test cases per page'),
+  offset: z.number().describe('Offset applied to the query'),
+  limit: z.number().describe('Limit applied to the query'),
   data: z
     .array(
       getTestCaseOutputSchema.extend({
@@ -593,8 +606,21 @@ export type UpdateTestCaseOutput = z.infer<typeof updateTestCaseOutputSchema>
 
 export const listFoldersInputSchema = z.object({
   projectCode: projectCodeSchema,
-  page: z.number().optional().describe('Page number for pagination'),
-  limit: z.number().optional().default(100).describe('Number of items per page'),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe('Number of folders to skip before returning results (defaults to 0)'),
+  limit: z
+    .number()
+    .int()
+    .min(0)
+    .max(5000)
+    .default(20)
+    .describe(
+      'Maximum number of folders to return (0-5000, defaults to 20). Use 0 to fetch only the total count'
+    ),
   sortField: z
     .enum(['id', 'project_id', 'title', 'pos', 'parent_id', 'created_at', 'updated_at'])
     .optional()
@@ -608,8 +634,8 @@ export type ListFoldersInput = z.infer<typeof listFoldersInputSchema>
 
 export const listFoldersOutputSchema = z.object({
   total: z.number().describe('Total number of items available'),
-  page: z.number().describe('Current page number'),
-  limit: z.number().describe('Number of items per page'),
+  offset: z.number().describe('Offset applied to the query'),
+  limit: z.number().describe('Limit applied to the query'),
   data: z.array(testFolderSchema).nullable().describe('List of folders'),
 })
 export type ListFoldersOutput = z.infer<typeof listFoldersOutputSchema>

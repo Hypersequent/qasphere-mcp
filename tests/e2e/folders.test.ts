@@ -104,7 +104,7 @@ describe('folders', () => {
 
     beforeAll(async () => {
       // Seed enough folders so pagination assertions don't degenerate on a
-      // near-empty project. Five lets us check limit=2, limit=3, and page=2.
+      // near-empty project. Five lets us check limit=2, limit=3, and offset=2.
       await callTool<UpsertFoldersOutput>(client, 'upsert_folders', {
         projectCode,
         folders: ['a', 'b', 'c', 'd', 'e'].map((suffix) => ({
@@ -124,6 +124,16 @@ describe('folders', () => {
       expect(result.data?.some((f) => f.title === `${folderName}-a`)).toBe(true)
     })
 
+    it('returns a paginated list with metadata', async () => {
+      const result = await callTool<ListFoldersOutput>(client, 'list_folders', {
+        projectCode,
+      })
+      expect(typeof result.total).toBe('number')
+      // The input defaults (offset 0, limit 20) are applied and echoed back.
+      expect(result.offset).toBe(0)
+      expect(result.limit).toBe(20)
+    })
+
     it('respects limit=2 and limit=3 (backend honors pagination)', async () => {
       const r2 = await callTool<ListFoldersOutput>(client, 'list_folders', {
         projectCode,
@@ -141,28 +151,41 @@ describe('folders', () => {
       expect(r3.data?.length).toBe(3)
     })
 
-    it('returns non-overlapping items on page 2', async () => {
-      const page1 = await callTool<ListFoldersOutput>(client, 'list_folders', {
+    it('returns non-overlapping items with offset pagination', async () => {
+      const first = await callTool<ListFoldersOutput>(client, 'list_folders', {
         projectCode,
         limit: 2,
-        page: 1,
+        offset: 0,
         sortField: 'id',
         sortOrder: 'asc',
       })
-      const page2 = await callTool<ListFoldersOutput>(client, 'list_folders', {
+      const second = await callTool<ListFoldersOutput>(client, 'list_folders', {
         projectCode,
         limit: 2,
-        page: 2,
+        offset: 2,
         sortField: 'id',
         sortOrder: 'asc',
       })
-      expect(page1.data?.length).toBe(2)
-      expect(page2.data?.length).toBeGreaterThan(0)
-      expect(page2.page).toBe(2)
-      const page1Ids = new Set(page1.data?.map((f) => f.id))
-      for (const f of page2.data ?? []) {
-        expect(page1Ids.has(f.id)).toBe(false)
+      expect(first.data?.length).toBe(2)
+      expect(first.offset).toBe(0)
+      expect(first.limit).toBe(2)
+      expect(second.data?.length).toBeGreaterThan(0)
+      expect(second.offset).toBe(2)
+      expect(second.limit).toBe(2)
+      const firstIds = new Set(first.data?.map((f) => f.id))
+      for (const f of second.data ?? []) {
+        expect(firstIds.has(f.id)).toBe(false)
       }
+    })
+
+    it('returns only the total when limit=0', async () => {
+      const result = await callTool<ListFoldersOutput>(client, 'list_folders', {
+        projectCode,
+        limit: 0,
+      })
+      expect(result.limit).toBe(0)
+      expect(result.total).toBeGreaterThan(0)
+      expect(result.data ?? []).toHaveLength(0)
     })
 
     it('honors sortOrder asc vs desc on id', async () => {
