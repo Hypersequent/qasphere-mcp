@@ -1,5 +1,24 @@
 # QA Sphere MCP Server
 
+> [!IMPORTANT]
+> **This repository is archived and no longer maintained.**
+>
+> QA Sphere now serves an MCP server directly — there is no need to run this
+> standalone package. The hosted server is always up to date with the QA Sphere
+> API, exposes the full set of tools allowed by your role, and needs nothing
+> installed locally.
+>
+> **Recommended setup:** in QA Sphere go to **Settings ⚙️ → MCP Server**, pick your
+> assistant and access level, paste or create an API key, and copy the generated
+> command. For Claude Code it looks like this:
+>
+> ```sh
+> claude mcp add --transport http qasphere https://your-company.region.qasphere.com/api/mcp \
+>   --header "Authorization: Bearer YOUR_API_KEY"
+> ```
+>
+> The instructions below are kept for reference only.
+
 A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/) test management system.
 
 This integration enables Large Language Models (LLMs) to interact directly with QA Sphere test cases, allowing you to discover, summarize, and chat about test cases. In AI-powered IDEs that support MCP, you can reference specific QA Sphere test cases within your development workflow.
