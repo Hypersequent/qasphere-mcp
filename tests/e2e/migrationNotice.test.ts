@@ -11,6 +11,9 @@ const SERVER_ENTRY = path.join(REPO_ROOT, 'src/index.ts')
 
 type ToolContent = { type: string; text?: string }
 
+/** Distinctive enough to spot in a tool result without pinning the exact wording. */
+const NOTICE_MARKER = 'no longer maintained'
+
 const textOf = (result: { content?: unknown }): string =>
   (Array.isArray(result.content) ? (result.content as ToolContent[]) : [])
     .map((c) => c.text ?? '')
@@ -50,23 +53,23 @@ describe('hosted MCP migration notice', () => {
 
   it('advertises the hosted endpoint in the server instructions', () => {
     const instructions = client.getInstructions() ?? ''
-    expect(instructions).toContain('/api/mcp')
-    expect(instructions).toContain('no longer maintained')
+    expect(instructions).toContain(NOTICE_MARKER)
+    expect(instructions).toContain('Settings -> MCP Server')
   })
 
   it('appends the notice to the first tool result and not to later ones', async () => {
     const first = await client.callTool({ name: 'list_projects', arguments: {} })
-    expect(textOf(first)).toContain('/api/mcp')
+    expect(textOf(first)).toContain(NOTICE_MARKER)
 
     const second = await client.callTool({ name: 'list_projects', arguments: {} })
-    expect(textOf(second)).not.toContain('/api/mcp')
+    expect(textOf(second)).not.toContain(NOTICE_MARKER)
   })
 
   it('leaves results untouched when QASPHERE_MCP_HIDE_MIGRATION_NOTICE is set', async () => {
     const quiet = await startOwnServer({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '1' })
     try {
       const result = await quiet.callTool({ name: 'list_projects', arguments: {} })
-      expect(textOf(result)).not.toContain('/api/mcp')
+      expect(textOf(result)).not.toContain(NOTICE_MARKER)
     } finally {
       await quiet.close()
     }

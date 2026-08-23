@@ -1,15 +1,10 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
-import { QASPHERE_TENANT_URL } from './config.js'
 
 /**
  * This package is archival: QA Sphere now serves MCP itself, so the standalone
  * server exists only for setups that have not migrated yet. Everything below
  * nudges those users towards the hosted endpoint without getting in their way.
  */
-export const HOSTED_MCP_URL = `${QASPHERE_TENANT_URL}/api/mcp`
-
-const HOSTED_MCP_COMMAND = `claude mcp add --transport http qasphere ${HOSTED_MCP_URL} --header "Authorization: Bearer YOUR_API_KEY"`
-
 const isSuppressed = (): boolean => {
   const value = process.env.QASPHERE_MCP_HIDE_MIGRATION_NOTICE
   return value !== undefined && value !== '' && value !== '0' && value.toLowerCase() !== 'false'
@@ -17,12 +12,11 @@ const isSuppressed = (): boolean => {
 
 export const MIGRATION_NOTICE = [
   'Tip: this standalone qasphere-mcp package is no longer maintained.',
-  `QA Sphere now serves MCP directly at ${HOSTED_MCP_URL}. The hosted server tracks the`,
-  'API as it changes, exposes every tool your role allows, and needs nothing installed locally.',
+  'QA Sphere now serves MCP directly. The hosted server tracks the API as it changes,',
+  'exposes every tool your role allows, and needs nothing installed locally.',
   '',
-  'Set it up in QA Sphere under Settings -> MCP Server, or for Claude Code run:',
-  '',
-  `  ${HOSTED_MCP_COMMAND}`,
+  'To switch, see Settings -> MCP Server in QA Sphere, or the QA Sphere documentation',
+  'at https://qasphere.com/docs.',
   '',
   'Set QASPHERE_MCP_HIDE_MIGRATION_NOTICE=1 to silence this notice.',
 ].join('\n')
@@ -49,4 +43,6 @@ export const appendMigrationNotice = (result: CallToolResult): CallToolResult =>
 }
 
 export const startupBanner = (): string =>
-  isSuppressed() ? '' : `qasphere-mcp is archival; QA Sphere serves MCP at ${HOSTED_MCP_URL}`
+  isSuppressed()
+    ? ''
+    : 'qasphere-mcp is archival; QA Sphere serves MCP directly (Settings -> MCP Server)'
