@@ -17,7 +17,9 @@
 >   --header "Authorization: Bearer YOUR_API_KEY"
 > ```
 >
-> The instructions below are kept for reference only.
+> The instructions below are kept for reference only. While running the standalone
+> server, it points this out once per session; set
+> `QASPHERE_MCP_HIDE_MIGRATION_NOTICE=1` to silence that.
 
 A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/) test management system.
 

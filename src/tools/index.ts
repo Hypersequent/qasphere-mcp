@@ -1,4 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp'
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+import { appendMigrationNotice } from '../migration-notice.js'
 import { registerTools as registerCustomFieldsTools } from './customFields.js'
 import { registerTools as registerFoldersTools } from './folders.js'
 import { registerTools as registerProjectsTools } from './projects.js'
@@ -8,7 +10,29 @@ import { registerTools as registerSharedStepsTools } from './shared-steps.js'
 import { registerTools as registerTagsTools } from './tags.js'
 import { registerTools as registerTCasesTools } from './tcases.js'
 
+type ToolCallback = (...args: unknown[]) => Promise<CallToolResult> | CallToolResult
+
+/**
+ * Patch `registerTool` once, before the per-domain registrars run, so every tool
+ * carries the hosted-MCP notice without each one having to remember to add it.
+ * The notice only rides along on the first successful call of the process.
+ */
+const attachMigrationNotice = (server: McpServer) => {
+  const register = server.registerTool.bind(server) as (
+    name: string,
+    config: unknown,
+    cb: ToolCallback
+  ) => unknown
+
+  const withNotice = (name: string, config: unknown, cb: ToolCallback) =>
+    register(name, config, async (...args: unknown[]) => appendMigrationNotice(await cb(...args)))
+
+  server.registerTool = withNotice as unknown as McpServer['registerTool']
+}
+
 export const registerTools = (server: McpServer) => {
+  attachMigrationNotice(server)
+
   registerCustomFieldsTools(server)
   registerFoldersTools(server)
   registerProjectsTools(server)
