@@ -16,6 +16,11 @@ type ToolCallback = (...args: unknown[]) => Promise<CallToolResult> | CallToolRe
  * Patch `registerTool` once, before the per-domain registrars run, so every tool
  * carries the hosted-MCP notice without each one having to remember to add it.
  * The notice only rides along on the first successful call of the process.
+ *
+ * This assumes the SDK's 3-argument `registerTool(name, config, cb)` shape, which
+ * the casts below hide from the type checker. If an SDK bump changes or overloads
+ * that signature, tools would be wrapped wrongly without a compile error, so keep
+ * tests/e2e/migrationNotice.test.ts green across upgrades.
  */
 const attachMigrationNotice = (server: McpServer) => {
   const register = server.registerTool.bind(server) as (

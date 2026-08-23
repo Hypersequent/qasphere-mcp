@@ -65,11 +65,24 @@ describe('hosted MCP migration notice', () => {
     expect(textOf(second)).not.toContain(NOTICE_MARKER)
   })
 
-  it('leaves results untouched when QASPHERE_MCP_HIDE_MIGRATION_NOTICE is set', async () => {
+  it('silences every surface when QASPHERE_MCP_HIDE_MIGRATION_NOTICE is set', async () => {
     const quiet = await startOwnServer({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '1' })
     try {
+      // The instructions surface is the easiest of the three to leave ungated,
+      // since it is built once rather than per call — assert it explicitly.
+      expect(quiet.getInstructions() ?? '').not.toContain(NOTICE_MARKER)
+
       const result = await quiet.callTool({ name: 'list_projects', arguments: {} })
       expect(textOf(result)).not.toContain(NOTICE_MARKER)
+    } finally {
+      await quiet.close()
+    }
+  })
+
+  it('still describes the server when the notice is suppressed', async () => {
+    const quiet = await startOwnServer({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '1' })
+    try {
+      expect(quiet.getInstructions() ?? '').toContain('QA Sphere test management')
     } finally {
       await quiet.close()
     }

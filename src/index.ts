@@ -4,7 +4,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
 import { LoggingTransport } from './LoggingTransport.js'
-import { SERVER_INSTRUCTIONS, startupBanner } from './migration-notice.js'
+import { buildServerInstructions, startupBanner } from './migration-notice.js'
 import { registerTools } from './tools/index.js'
 
 // Create MCP server
@@ -14,7 +14,7 @@ const server = new McpServer(
     version: process.env.npm_package_version || '0.0.0',
     description: 'QA Sphere MCP server for fetching test cases and projects.',
   },
-  { instructions: SERVER_INSTRUCTIONS }
+  { instructions: buildServerInstructions() }
 )
 
 registerTools(server)
