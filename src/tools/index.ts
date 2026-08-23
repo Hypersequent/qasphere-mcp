@@ -29,8 +29,19 @@ const attachMigrationNotice = (server: McpServer) => {
     cb: ToolCallback
   ) => unknown
 
-  const withNotice = (name: string, config: unknown, cb: ToolCallback) =>
-    register(name, config, async (...args: unknown[]) => appendMigrationNotice(await cb(...args)))
+  const withNotice = (name: string, config: unknown, cb: ToolCallback) => {
+    // Fail loudly if that assumption ever breaks, rather than registering a tool
+    // whose callback has silently landed in the wrong argument slot.
+    if (typeof cb !== 'function') {
+      throw new TypeError(
+        `registerTool('${name}') was called with an unexpected signature; ` +
+          'the migration-notice wrapper in src/tools/index.ts needs updating for this SDK version.'
+      )
+    }
+    return register(name, config, async (...args: unknown[]) =>
+      appendMigrationNotice(await cb(...args))
+    )
+  }
 
   server.registerTool = withNotice as unknown as McpServer['registerTool']
 }

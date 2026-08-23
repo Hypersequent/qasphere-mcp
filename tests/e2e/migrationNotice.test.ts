@@ -1,13 +1,5 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { env } from './helpers/fixtures.js'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = path.resolve(__dirname, '../..')
-const SERVER_ENTRY = path.join(REPO_ROOT, 'src/index.ts')
+import { type IsolatedServer, startIsolatedMcpClient } from './helpers/mcp-client.js'
 
 type ToolContent = { type: string; text?: string }
 
@@ -19,72 +11,90 @@ const textOf = (result: { content?: unknown }): string =>
     .map((c) => c.text ?? '')
     .join('\n')
 
-/**
- * The notice is emitted once per server process, so these tests need their own
- * server rather than the singleton shared by the rest of the suite.
- */
-async function startOwnServer(extraEnv: Record<string, string> = {}): Promise<Client> {
-  const transport = new StdioClientTransport({
-    command: 'npx',
-    args: ['tsx', SERVER_ENTRY],
-    cwd: REPO_ROOT,
-    env: {
-      QASPHERE_TENANT_URL: env.QASPHERE_E2E_TENANT_URL,
-      QASPHERE_API_KEY: env.QASPHERE_E2E_API_KEY,
-      PATH: process.env.PATH ?? '',
-      ...extraEnv,
-    },
-  })
-  const client = new Client({ name: 'qasphere-mcp-notice-e2e', version: '0.0.0' })
-  await client.connect(transport)
-  return client
+/** stderr arrives independently of the initialize response, so give it a moment. */
+async function waitForStderr(server: IsolatedServer, timeoutMs = 5000): Promise<string> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (server.stderr().includes('server started')) return server.stderr()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+  return server.stderr()
 }
 
+/**
+ * The notice is emitted once per server process, so every case here needs its
+ * own server rather than the singleton shared by the rest of the suite.
+ */
 describe('hosted MCP migration notice', () => {
-  let client: Client
+  describe('by default', () => {
+    let server: IsolatedServer
 
-  beforeAll(async () => {
-    client = await startOwnServer()
+    beforeAll(async () => {
+      server = await startIsolatedMcpClient()
+    })
+
+    afterAll(async () => {
+      await server.close()
+    })
+
+    it('advertises the hosted server in the MCP instructions', () => {
+      const instructions = server.client.getInstructions() ?? ''
+      expect(instructions).toContain(NOTICE_MARKER)
+      expect(instructions).toContain('Settings -> MCP Server')
+    })
+
+    it('logs a startup banner to stderr', async () => {
+      expect(await waitForStderr(server)).toContain('archival')
+    })
+
+    it('appends the notice to the first tool result and not to later ones', async () => {
+      const first = await server.client.callTool({ name: 'list_projects', arguments: {} })
+      expect(textOf(first)).toContain(NOTICE_MARKER)
+
+      const second = await server.client.callTool({ name: 'list_projects', arguments: {} })
+      expect(textOf(second)).not.toContain(NOTICE_MARKER)
+    })
   })
 
-  afterAll(async () => {
-    await client.close()
-  })
+  describe('with QASPHERE_MCP_HIDE_MIGRATION_NOTICE=1', () => {
+    let server: IsolatedServer
 
-  it('advertises the hosted endpoint in the server instructions', () => {
-    const instructions = client.getInstructions() ?? ''
-    expect(instructions).toContain(NOTICE_MARKER)
-    expect(instructions).toContain('Settings -> MCP Server')
-  })
+    beforeAll(async () => {
+      server = await startIsolatedMcpClient({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '1' })
+    })
 
-  it('appends the notice to the first tool result and not to later ones', async () => {
-    const first = await client.callTool({ name: 'list_projects', arguments: {} })
-    expect(textOf(first)).toContain(NOTICE_MARKER)
+    afterAll(async () => {
+      await server.close()
+    })
 
-    const second = await client.callTool({ name: 'list_projects', arguments: {} })
-    expect(textOf(second)).not.toContain(NOTICE_MARKER)
-  })
+    it('silences all three surfaces', async () => {
+      // Instructions are the easiest of the three to leave ungated, since they
+      // are built once per process rather than per call — assert them explicitly.
+      expect(server.client.getInstructions() ?? '').not.toContain(NOTICE_MARKER)
+      expect(await waitForStderr(server)).not.toContain('archival')
 
-  it('silences every surface when QASPHERE_MCP_HIDE_MIGRATION_NOTICE is set', async () => {
-    const quiet = await startOwnServer({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '1' })
-    try {
-      // The instructions surface is the easiest of the three to leave ungated,
-      // since it is built once rather than per call — assert it explicitly.
-      expect(quiet.getInstructions() ?? '').not.toContain(NOTICE_MARKER)
-
-      const result = await quiet.callTool({ name: 'list_projects', arguments: {} })
+      const result = await server.client.callTool({ name: 'list_projects', arguments: {} })
       expect(textOf(result)).not.toContain(NOTICE_MARKER)
-    } finally {
-      await quiet.close()
-    }
+    })
+
+    it('still describes the server itself', () => {
+      expect(server.client.getInstructions() ?? '').toContain('QA Sphere test management')
+    })
   })
 
-  it('still describes the server when the notice is suppressed', async () => {
-    const quiet = await startOwnServer({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '1' })
-    try {
-      expect(quiet.getInstructions() ?? '').toContain('QA Sphere test management')
-    } finally {
-      await quiet.close()
-    }
+  describe('with a falsy QASPHERE_MCP_HIDE_MIGRATION_NOTICE', () => {
+    let server: IsolatedServer
+
+    beforeAll(async () => {
+      server = await startIsolatedMcpClient({ QASPHERE_MCP_HIDE_MIGRATION_NOTICE: '0' })
+    })
+
+    afterAll(async () => {
+      await server.close()
+    })
+
+    it('treats the notice as enabled', () => {
+      expect(server.client.getInstructions() ?? '').toContain(NOTICE_MARKER)
+    })
   })
 })

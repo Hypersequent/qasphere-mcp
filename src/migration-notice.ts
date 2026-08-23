@@ -29,7 +29,14 @@ export const MIGRATION_NOTICE = [
   'Set QASPHERE_MCP_HIDE_MIGRATION_NOTICE=1 to silence this notice.',
 ].join('\n')
 
-/** Built per server construction so the opt-out reaches this surface too. */
+/**
+ * Built per server construction so the opt-out reaches this surface too.
+ *
+ * This carries the full notice even though the first tool result does as well.
+ * That redundancy is deliberate: instructions are the only surface a session
+ * that never calls a tool will see, and tool output is the only one some clients
+ * surface to the user. The relay directive keeps the model from saying it twice.
+ */
 export const buildServerInstructions = (): string =>
   isSuppressed()
     ? SERVER_SUMMARY

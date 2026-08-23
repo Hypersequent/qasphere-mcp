@@ -20,10 +20,12 @@ export type McpHandle = {
 let cached: McpHandle | undefined
 let pending: Promise<McpHandle> | undefined
 
-async function startMcpClient(): Promise<McpHandle> {
-  // Truncate the previous run's log so failures show only this run's output.
-  fs.writeFileSync(STDERR_LOG, '')
-
+/**
+ * Single place that knows how to launch the server under test. Both the shared
+ * singleton below and the isolated servers used by per-process tests go through
+ * here, so the two cannot drift apart.
+ */
+async function spawnServer(extraEnv: Record<string, string> = {}) {
   const transport = new StdioClientTransport({
     command: 'npx',
     args: ['tsx', SERVER_ENTRY],
@@ -32,6 +34,7 @@ async function startMcpClient(): Promise<McpHandle> {
       QASPHERE_TENANT_URL: env.QASPHERE_E2E_TENANT_URL,
       QASPHERE_API_KEY: env.QASPHERE_E2E_API_KEY,
       PATH: process.env.PATH ?? '',
+      ...extraEnv,
     },
     stderr: 'pipe',
   })
@@ -40,6 +43,15 @@ async function startMcpClient(): Promise<McpHandle> {
   await client.connect(transport)
 
   const stderr = (transport as unknown as { stderr?: NodeJS.ReadableStream }).stderr
+  return { client, stderr }
+}
+
+async function startMcpClient(): Promise<McpHandle> {
+  // Truncate the previous run's log so failures show only this run's output.
+  fs.writeFileSync(STDERR_LOG, '')
+
+  const { client, stderr } = await spawnServer()
+
   if (stderr && typeof stderr.pipe === 'function') {
     stderr.pipe(fs.createWriteStream(STDERR_LOG, { flags: 'w' }))
   }
@@ -48,6 +60,37 @@ async function startMcpClient(): Promise<McpHandle> {
 
   return {
     client,
+    close: async () => {
+      await client.close()
+    },
+  }
+}
+
+export type IsolatedServer = {
+  client: Client
+  /** Everything the server has written to stderr so far. */
+  stderr: () => string
+  close: () => Promise<void>
+}
+
+/**
+ * A server of one's own, outside the shared singleton. Needed by anything that
+ * asserts on per-process behaviour — startup output, or state that is set up
+ * once per process — where the cached client would give the wrong answer.
+ */
+export async function startIsolatedMcpClient(
+  extraEnv: Record<string, string> = {}
+): Promise<IsolatedServer> {
+  const { client, stderr } = await spawnServer(extraEnv)
+
+  let captured = ''
+  stderr?.on('data', (chunk: Buffer | string) => {
+    captured += String(chunk)
+  })
+
+  return {
+    client,
+    stderr: () => captured,
     close: async () => {
       await client.close()
     },
