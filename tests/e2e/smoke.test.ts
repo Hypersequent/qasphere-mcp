@@ -1,6 +1,13 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { getMcpHandle } from './helpers/mcp-client.js'
+import { getMcpHandle, startIsolatedMcpClient } from './helpers/mcp-client.js'
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'))
+  .version as string
 
 const EXPECTED_TOOLS = [
   'get_project',
@@ -40,6 +47,21 @@ describe('smoke', () => {
     for (const tool of result.tools) {
       expect(tool.inputSchema, `${tool.name} missing inputSchema`).toBeDefined()
       expect(tool.outputSchema, `${tool.name} missing outputSchema`).toBeDefined()
+    }
+  })
+
+  /**
+   * The version used to come from npm_package_version, which describes whichever
+   * package.json npm loaded — the consuming project's under `npx qasphere-mcp`,
+   * and nothing at all when the binary is run directly. A hostile value here must
+   * not reach the handshake.
+   */
+  it('reports its own package version, not npm_package_version', async () => {
+    const server = await startIsolatedMcpClient({ npm_package_version: '9.9.9-bogus' })
+    try {
+      expect(server.client.getServerVersion()?.version).toBe(PKG_VERSION)
+    } finally {
+      await server.close()
     }
   })
 })
