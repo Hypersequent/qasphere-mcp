@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { readFileSync } from 'node:fs'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
@@ -7,11 +8,19 @@ import { LoggingTransport } from './LoggingTransport.js'
 import { buildServerInstructions, startupBanner } from './migration-notice.js'
 import { registerTools } from './tools/index.js'
 
+// Read from our own package.json rather than npm_package_version: that variable
+// describes whichever package.json npm happened to load, which under `npx
+// qasphere-mcp` is the consuming project's, and is unset when the binary is run
+// directly. Resolved relative to this module, so it works from src/ and dist/.
+const { version } = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8')
+) as { version: string }
+
 // Create MCP server
 const server = new McpServer(
   {
     name: 'qasphere-mcp',
-    version: process.env.npm_package_version || '0.0.0',
+    version,
     description: 'QA Sphere MCP server for fetching test cases and projects.',
   },
   { instructions: buildServerInstructions() }
