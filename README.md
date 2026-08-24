@@ -9,15 +9,12 @@
 > installed locally.
 >
 > **Recommended setup:** in QA Sphere go to **Settings ⚙️ → MCP Server**, pick your
-> assistant and access level, paste or create an API key, and copy the generated
-> command. For Claude Code it looks like this:
+> assistant and access level, add an API key, and follow the setup instructions shown
+> there. See the [QA Sphere documentation](https://qasphere.com/docs) for details.
 >
-> ```sh
-> claude mcp add --transport http qasphere https://your-company.region.qasphere.com/api/mcp \
->   --header "Authorization: Bearer YOUR_API_KEY"
-> ```
->
-> The instructions below are kept for reference only.
+> The instructions below are kept for reference only. While running the standalone
+> server, it points this out once per session; set
+> `QASPHERE_MCP_HIDE_MIGRATION_NOTICE=1` to silence that.
 
 A [Model Context Protocol](https://github.com/modelcontextprotocol) server for the [QA Sphere](https://qasphere.com/) test management system.
 
